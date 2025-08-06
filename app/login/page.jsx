@@ -16,28 +16,33 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const { data } = await loginUser({ username, password });
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-      const userRes = await getUser(data.access);
-      const role = userRes.data.role;
+  try {
+    const { data } = await loginUser(username, password);
+    console.log("Login success:", data);
 
-      if (role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      setError("Invalid username or password");
-    } finally {
-      setLoading(false);
+    localStorage.setItem("access", data.access);
+    localStorage.setItem("refresh", data.refresh);
+
+    const userRes = await getUser(data.access);
+    const role = userRes.data.role;
+
+    if (role === "admin") {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/dashboard");
     }
-  };
+  } catch (err) {
+    console.error("Login error:", err.response?.data || err.message);
+    setError("Invalid username or password");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
@@ -60,30 +65,38 @@ export default function LoginPage() {
         <div className="w-[440px] h-[540px] p-12 rounded-2xl bg-white/25 backdrop-blur-xl shadow-2xl border border-white/40">
           <h1 className="text-4xl font-bold text-white text-center mb-8 pb-6">Login</h1>
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+
           <form onSubmit={handleLogin} className="flex flex-col gap-8">
+            {/* Username */}
             <input
               type="text"
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-4 rounded-lg bg-white/30 text-white placeholder-gray-200 outline-none focus:ring-2 focus:ring-purple-400"
+              className="w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
             />
+
+            {/* Password */}
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-4 rounded-lg bg-white/30 text-white placeholder-gray-200 outline-none focus:ring-2 focus:ring-purple-400"
+                className="w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4 text-white"
+                className="absolute right-4 top-4 text-gray-600"
               >
                 {showPassword ? <EyeOff /> : <Eye />}
               </button>
             </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -107,18 +120,32 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Animations */}
       <style jsx>{`
         @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
         }
         .animate-gradient {
           animation: gradientMove 6s ease infinite;
         }
         @keyframes pulseSlow {
-          0%, 100% { transform: scale(1); opacity: 0.7; }
-          50% { transform: scale(1.3); opacity: 0.4; }
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 0.7;
+          }
+          50% {
+            transform: scale(1.3);
+            opacity: 0.4;
+          }
         }
         .animate-pulse-slow {
           animation: pulseSlow 8s ease-in-out infinite;

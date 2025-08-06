@@ -42,44 +42,45 @@ export default function RegisterPage() {
     return result;
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
+ const handleRegister = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    // ✅ Password match check
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+  if (password !== confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
+  setLoading(true);
+
+  const payload = {
+    username,
+    email,
+    password1: password,        // ✅ must match backend
+    password2: confirmPassword, // ✅ must match backend
+    role,
+  };
+
+  if (role === "user") {
+    if (!companyCode) {
+      setError("Company Code is required for users");
+      setLoading(false);
       return;
     }
+    payload.company_code = companyCode;
+  }
 
-    setLoading(true);
+  try {
+    await registerUser(payload);
+    router.push("/login");
+  } catch (err) {
+    setError(`Registration failed: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    const payload = {
-      username,
-      email,
-      password1: password, // ✅ backend expects password1
-      password2: confirmPassword, // ✅ confirm password
-      role,
-    };
 
-    if (role === "user") {
-      if (!companyCode) {
-        setError("Company Code is required for users");
-        setLoading(false);
-        return;
-      }
-      payload.company_code = companyCode;
-    }
-
-    try {
-      await registerUser(payload);
-      router.push("/login");
-    } catch (err) {
-      setError(`Registration failed: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">

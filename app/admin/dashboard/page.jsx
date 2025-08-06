@@ -27,13 +27,17 @@ export default function AdminDashboard() {
 
   if (!user) return <p>Loading...</p>;
 
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <p className="mt-2">Welcome, {user.username} (Role: {user.role})</p>
-      <div className="mt-6">
-        <p className="text-gray-700">Here you can manage users, view reports, and control the system.</p>
-      </div>
+return (
+  <div className="p-8">
+    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <p className="mt-2">Welcome, {user.username} (Role: {user.role})</p>
+    {user.company_code && (
+      <p className="mt-2">Your Company Code: <strong>{user.company_code}</strong></p>
+    )}
+    <div className="mt-6">
+      <p className="text-gray-700">Here you can manage users, view reports, and control the system.</p>
     </div>
-  );
+  </div>
+);
+
 }
