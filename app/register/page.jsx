@@ -20,7 +20,7 @@ export default function RegisterPage() {
 
   // ✅ API call
   const registerUser = async (data) => {
-    const response = await fetch("http://127.0.0.1:8000/auth/register/", {
+    const response = await fetch("https://backend-ug9v.onrender.com", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
