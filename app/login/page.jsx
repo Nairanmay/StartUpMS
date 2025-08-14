@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser, getUser } from "@/lib/api";
 import { Eye, EyeOff } from "lucide-react";
@@ -8,6 +8,7 @@ import animationData from "../animations/login-character.json";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const [mounted, setMounted] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,34 +16,42 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const { data } = await loginUser(username, password);
-    console.log("Login success:", data);
+    try {
+      const { data } = await loginUser(username, password);
+      console.log("Login success:", data);
 
-    localStorage.setItem("access", data.access);
-    localStorage.setItem("refresh", data.refresh);
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
 
-    const userRes = await getUser(data.access);
-    const role = userRes.data.role;
+      const userRes = await getUser(data.access);
+      const role = userRes.data.role;
 
-    if (role === "admin") {
-      router.push("/admin/dashboard");
-    } else {
-      router.push("/dashboard");
+      if (role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      setError("Invalid username or password");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Login error:", err.response?.data || err.message);
-    setError("Invalid username or password");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
@@ -57,13 +66,13 @@ export default function LoginPage() {
       {/* Glass effect container */}
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-16 px-8">
         {/* Character Animation */}
-        <div className="w-[750px] h-[750px] md:w-[600px] md:h-[600px] flex justify-center">
+        <div className="w-[650px] h-[650px] md:w-[500px] md:h-[500px] flex justify-center">
           <Lottie animationData={animationData} loop={true} />
         </div>
 
         {/* Login Box */}
-        <div className="w-[440px] h-[540px] p-12 rounded-2xl bg-white/25 backdrop-blur-xl shadow-2xl border border-white/40">
-          <h1 className="text-4xl font-bold text-white text-center mb-8 pb-6">Login</h1>
+        <div className="w-[500px] h-[640px] p-14 rounded-2xl bg-white/25 backdrop-blur-xl shadow-2xl border border-white/40">
+          <h1 className="text-5xl font-bold text-white text-center mb-10 pb-6">Login</h1>
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-8">
@@ -73,7 +82,7 @@ export default function LoginPage() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full p-5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
 
@@ -84,7 +93,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 required
               />
               <button
@@ -100,7 +109,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-purple-700 hover:bg-purple-800 text-white font-semibold p-4 rounded-lg transition-all duration-300 flex justify-center text-lg"
+              className="bg-purple-700 hover:bg-purple-800 text-white font-semibold p-5 rounded-lg transition-all duration-300 flex justify-center text-lg"
             >
               {loading ? (
                 <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -111,9 +120,12 @@ export default function LoginPage() {
           </form>
 
           {/* ✅ Don't have an account? */}
-          <p className="text-center text-white mt-6">
+          <p className="text-center text-white mt-8">
             Don’t have an account?{" "}
-            <Link href="/register" className="text-yellow-300 hover:text-yellow-400 font-semibold transition-colors">
+            <Link
+              href="/register"
+              className="text-yellow-300 hover:text-yellow-400 font-semibold transition-colors"
+            >
               Create one
             </Link>
           </p>

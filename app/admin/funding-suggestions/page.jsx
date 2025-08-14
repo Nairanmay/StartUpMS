@@ -24,9 +24,11 @@ export default function FundingPage() {
     founder_equity: "",
     funds_required: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -59,20 +61,54 @@ export default function FundingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-3xl font-bold text-center text-indigo-600 mb-6">
-          Startup Funding Suggestion
+    <div
+      className={`min-h-screen p-6 md:p-12 relative overflow-hidden transition-colors duration-500 ${
+        darkMode
+          ? "bg-gray-900 text-white"
+          : "bg-gradient-to-br from-purple-100 via-blue-100 to-green-100 text-black"
+      }`}
+    >
+      {/* Toggle */}
+      <div className="absolute top-6 right-6 z-50">
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg hover:bg-indigo-700 transition"
+        >
+          {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+        </button>
+      </div>
+
+      {/* Glow effects */}
+      <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-3xl opacity-30 animate-pulse z-0" />
+      <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-300 rounded-full opacity-20 blur-2xl animate-bounce" />
+      <div className="absolute bottom-20 right-10 w-48 h-48 bg-pink-300 rounded-full opacity-20 blur-3xl animate-ping" />
+
+      <div
+        className={`relative z-10 max-w-6xl mx-auto backdrop-blur-xl shadow-2xl rounded-3xl px-8 py-12 border transition-all duration-300 hover:shadow-indigo-300 ${
+          darkMode
+            ? "bg-gray-800 border-gray-700"
+            : "bg-white/90 border-gray-200"
+        }`}
+      >
+        <h1
+          className={`text-5xl font-extrabold text-center mb-12 drop-shadow-lg tracking-tight ${
+            darkMode ? "text-indigo-300" : "text-indigo-700"
+          }`}
+        >
+          🚀 Startup Funding Suggestion
         </h1>
 
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"
         >
-          {/* Company Name */}
           <input
-            className="border p-3 rounded"
+            className={`border p-3 rounded-xl focus:ring-2 focus:ring-indigo-400 transition-all shadow-md ${
+              darkMode
+                ? "bg-gray-700 text-white border-gray-600 placeholder-gray-400"
+                : "bg-white text-black border-gray-300 placeholder-gray-500"
+            }`}
             name="company_name"
             placeholder="Company Name"
             value={formData.company_name}
@@ -80,12 +116,15 @@ export default function FundingPage() {
             required
           />
 
-          {/* Company Type */}
           <select
             name="company_type"
             value={formData.company_type}
             onChange={handleChange}
-            className="border p-3 rounded"
+            className={`border p-3 rounded-xl focus:ring-2 focus:ring-indigo-400 transition-all shadow-md ${
+              darkMode
+                ? "bg-gray-700 text-white border-gray-600"
+                : "bg-white text-black border-gray-300"
+            }`}
             required
           >
             <option value="">Select Company Type</option>
@@ -97,12 +136,15 @@ export default function FundingPage() {
             <option value="AI/ML">AI/ML</option>
           </select>
 
-          {/* Company Phase */}
           <select
             name="company_phase"
             value={formData.company_phase}
             onChange={handleChange}
-            className="border p-3 rounded"
+            className={`border p-3 rounded-xl focus:ring-2 focus:ring-indigo-400 transition-all shadow-md ${
+              darkMode
+                ? "bg-gray-700 text-white border-gray-600"
+                : "bg-white text-black border-gray-300"
+            }`}
             required
           >
             <option value="">Select Phase</option>
@@ -113,12 +155,15 @@ export default function FundingPage() {
             <option value="Growth">Growth</option>
           </select>
 
-          {/* Founder Equity */}
           <select
             name="founder_equity"
             value={formData.founder_equity}
             onChange={handleChange}
-            className="border p-3 rounded"
+            className={`border p-3 rounded-xl focus:ring-2 focus:ring-indigo-400 transition-all shadow-md ${
+              darkMode
+                ? "bg-gray-700 text-white border-gray-600"
+                : "bg-white text-black border-gray-300"
+            }`}
             required
           >
             <option value="">Select Founder Equity (%)</option>
@@ -129,51 +174,75 @@ export default function FundingPage() {
             ))}
           </select>
 
-          {/* Funds Required */}
           <select
             name="funds_required"
             value={formData.funds_required}
             onChange={handleChange}
-            className="border p-3 rounded"
+            className={`border p-3 rounded-xl focus:ring-2 focus:ring-indigo-400 transition-all shadow-md ${
+              darkMode
+                ? "bg-gray-700 text-white border-gray-600"
+                : "bg-white text-black border-gray-300"
+            }`}
             required
           >
-          <option value="">Select Funds Required (₹)</option>
-<option value="50000">₹50,000</option>
-<option value="100000">₹1,00,000</option>
-<option value="250000">₹2,50,000</option>
-<option value="500000">₹5,00,000</option>
-<option value="900000">₹9,00,000</option>
-<option value="2000000">₹20,00,000</option>
-</select>
+            <option value="">Select Funds Required (₹)</option>
+            <option value="50000">₹50,000</option>
+            <option value="100000">₹1,00,000</option>
+            <option value="250000">₹2,50,000</option>
+            <option value="500000">₹5,00,000</option>
+            <option value="900000">₹9,00,000</option>
+            <option value="2000000">₹20,00,000</option>
+          </select>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition"
+            className="bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 hover:scale-105 transition-transform duration-300 shadow-lg col-span-1 md:col-span-2"
           >
-            {loading ? "Loading..." : "Get Suggestion"}
+            {loading ? "Loading..." : "💡 Get Suggestion"}
           </button>
         </form>
 
-        {/* Result */}
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-red-600 text-center text-lg font-semibold">
+            {error}
+          </p>
+        )}
 
         {result && (
-          <div className="space-y-6">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <h2 className="text-lg font-semibold">Investor Type</h2>
+          <div className="space-y-8 animate-fade-in">
+            <div
+              className={`p-6 rounded-xl shadow-lg border ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-indigo-50 border-indigo-200 text-black"
+              }`}
+            >
+              <h2 className={`text-xl font-semibold ${darkMode ? "text-indigo-300" : "text-indigo-700"}`}>
+                Investor Type
+              </h2>
               <p>{result.investor_type}</p>
-              <h2 className="text-lg font-semibold mt-2">Equity to Dilute</h2>
+
+              <h2 className={`text-xl font-semibold mt-3 ${darkMode ? "text-indigo-300" : "text-indigo-700"}`}>
+                Equity to Dilute
+              </h2>
               <p>{result.equity_to_dilute}%</p>
-              <h2 className="text-lg font-semibold mt-2">Explanation</h2>
+
+              <h2 className={`text-xl font-semibold mt-3 ${darkMode ? "text-indigo-300" : "text-indigo-700"}`}>
+                Explanation
+              </h2>
               <p>{result.explanation}</p>
             </div>
 
-            {/* Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Pie Chart */}
-              <div className="bg-white p-4 shadow rounded-lg">
-                <h3 className="text-center font-semibold mb-2">
+              <div
+                className={`p-6 shadow-xl rounded-xl border ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-200 text-black"
+                }`}
+              >
+                <h3 className={`text-center font-semibold mb-4 ${darkMode ? "text-indigo-300" : "text-indigo-600"}`}>
                   Equity Distribution (After Investment)
                 </h3>
                 <PieChart width={300} height={300}>
@@ -187,10 +256,7 @@ export default function FundingPage() {
                     label
                   >
                     {result.graphs_data.pie_chart.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <ReTooltip />
@@ -198,16 +264,17 @@ export default function FundingPage() {
                 </PieChart>
               </div>
 
-              {/* Bar Chart */}
-              <div className="bg-white p-4 shadow rounded-lg">
-                <h3 className="text-center font-semibold mb-2">
+              <div
+                className={`p-6 shadow-xl rounded-xl border ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-200 text-black"
+                }`}
+              >
+                <h3 className={`text-center font-semibold mb-4 ${darkMode ? "text-indigo-300" : "text-indigo-600"}`}>
                   Equity Before vs After
                 </h3>
-                <BarChart
-                  width={350}
-                  height={300}
-                  data={result.graphs_data.bar_chart}
-                >
+                <BarChart width={350} height={300} data={result.graphs_data.bar_chart}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -224,3 +291,4 @@ export default function FundingPage() {
     </div>
   );
 }
+
