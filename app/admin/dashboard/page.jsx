@@ -200,7 +200,7 @@ export default function AdminDashboard() {
             description="AI powered Funding Suggestions."
           />
         </Link>
-        <Link href="/admin/assign-tasks" className="group">
+        <Link href="/admin/assign_task" className="group">
           <ActionCard
             icon={
               <ClipboardCheck className="w-12 h-12 text-blue-400 group-hover:text-pink-400 transition" />

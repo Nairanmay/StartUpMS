@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getUser } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { ClipboardList, FileText, Building } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -49,17 +50,19 @@ export default function Dashboard() {
       {/* Cards Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Tasks Card */}
-        <div className="glass-card hover:scale-105 transition-transform duration-300">
-          <div className="flex items-center mb-4">
-            <div className="p-3 bg-blue-500/30 text-white rounded-full">
-              <ClipboardList size={28} />
-            </div>
-            <h2 className="ml-4 text-2xl font-semibold text-white">Tasks</h2>
+         <Link href="/view_task" className="group">
+      <div className="glass-card hover:scale-105 transition-transform duration-300 cursor-pointer">
+        <div className="flex items-center mb-4">
+          <div className="p-3 bg-blue-500/30 text-white rounded-full">
+            <ClipboardList size={28} />
           </div>
-          <p className="text-white/80">
-            View and manage your assigned tasks efficiently.
-          </p>
+          <h2 className="ml-4 text-2xl font-semibold text-white">Tasks</h2>
         </div>
+        <p className="text-white/80">
+          View and manage your assigned tasks efficiently.
+        </p>
+      </div>
+    </Link>
 
         {/* Documents Card */}
         <div className="glass-card hover:scale-105 transition-transform duration-300">
