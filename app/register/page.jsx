@@ -80,7 +80,9 @@ export default function RegisterPage() {
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 animate-gradient bg-[length:200%_200%]"></div>
+     {/* Moving Gradient Background */}
+<div className="absolute inset-0 bg-gradient-to-br from-[#123B70] via-[#0A243F] to-[#FF7A33] animate-gradient bg-[length:200%_200%]"></div>
+
 
       {/* Decorative Circles */}
       <div className="absolute top-16 left-16 w-64 h-64 bg-white/40 rounded-full animate-pulse-slow"></div>
@@ -95,8 +97,13 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Box */}
-        <div className="w-[440px] p-12 rounded-2xl bg-white/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(255,255,255,0.2)] border border-white/40">
-          <h1 className="text-3xl font-bold text-white text-center mb-8">Register</h1>
+        <div className="w-[440px] p-12 rounded-2xl bg-white/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(255,255,255,0.2)] border border-white/40 relative">
+  
+  {/* Logo: absolutely positioned at top center */}
+  <div className="absolute -top-17 left-1/2 transform -translate-x-1/2 pb-12">
+    <img src="/logowb.png" alt="Logo" className="w-54 h-54 object-contain" />
+  </div>
+          <h1 className="text-3xl font-bold text-white text-center mb-8 pt-6">Register</h1>
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
           <form onSubmit={handleRegister} className="flex flex-col gap-5">
             <input

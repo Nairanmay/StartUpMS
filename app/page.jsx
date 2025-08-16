@@ -76,7 +76,7 @@ export default function LandingPage() {
     },
     {
       title: "✅ Smart Task Assignment",
-      desc: "Automatically assigns tasks to the right employees based on skills.",
+      desc: "assigns tasks to the right employees based on skills with minimun hustle.",
     },
     {
       title: "💰 AI Funding Advisor",
@@ -341,12 +341,12 @@ className="relative z-10 text-4xl md:text-6xl font-extrabold mb-6 bg-clip-text t
               ✅ Smart Task Assignment
             </h2>
             <p className="text-gray-600 mb-4">
-              Assigning tasks manually wastes time. Our system automatically
-              assigns employees the right tasks based on skill & workload, so
+              Assigning tasks Efficiently saves time. Our system helps
+              assign employees the right tasks based on skill & workload, so
               nothing falls through the cracks.
             </p>
             <ul className="list-disc list-inside text-gray-600">
-              <li>AI-based employee matching</li>
+              <li> Easy and efficient</li>
               <li>Boosts productivity</li>
               <li>Reduces management workload</li>
             </ul>
