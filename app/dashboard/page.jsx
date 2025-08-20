@@ -13,10 +13,10 @@ export default function Dashboard() {
   const router = useRouter();
 
   const userNavItems = [
-    { href: "/", label: "Home", icon: <Home className="w-5 h-5" /> },
+    { href: "/dashboard", label: "Home", icon: <Home className="w-5 h-5" /> },
     { href: "/view_task", label: "Tasks", icon: <ClipboardList className="w-5 h-5" /> },
-    { href: "/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
-    { href: "/company", label: "Company", icon: <Building className="w-5 h-5" /> },
+    // { href: "/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
+    // { href: "/company", label: "Company", icon: <Building className="w-5 h-5" /> },
   ];
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function Dashboard() {
           </Link>
 
           {/* Documents Card */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
+          {/* <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
             <div className="flex items-center mb-4">
               <div className="p-3 bg-green-100 text-green-600 rounded-full">
                 <FileText size={28} />
@@ -149,10 +149,10 @@ export default function Dashboard() {
             <p className="text-gray-600">
               Access and upload important company documents.
             </p>
-          </div>
+          </div> */}
 
           {/* Company Details Card */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
+          {/* <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
             <div className="flex items-center mb-4">
               <div className="p-3 bg-purple-100 text-purple-600 rounded-full">
                 <Building size={28} />
@@ -164,7 +164,7 @@ export default function Dashboard() {
             <p className="text-gray-600">
               Learn more about the company and its structure.
             </p>
-          </div>
+          </div> */}
         </div>
       </main>
 

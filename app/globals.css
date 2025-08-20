@@ -45,3 +45,9 @@ body {
   background-size: 600% 600%;
   animation: gradientShift 20s ease infinite;
 }
+
+@keyframes float {
+  0%   { transform: translateY(0px) translateX(0px); }
+  50%  { transform: translateY(-20px) translateX(15px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}

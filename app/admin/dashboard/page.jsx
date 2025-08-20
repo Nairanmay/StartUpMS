@@ -133,7 +133,7 @@ function Sidebar({ user }) {
   };
 
   const navItems = [
-    { href: "/admin", label: "Home", icon: <Home className="w-5 h-5" /> },
+    { href: "/admin/dashboard", label: "Home", icon: <Home className="w-5 h-5" /> },
     { href: "/admin/employee", label: "Manage Users", icon: <Users className="w-5 h-5" /> },
     { href: "/admin/pitch-deck", label: "Pitch Deck", icon: <FileText className="w-5 h-5" /> },
     { href: "/admin/funding-suggestions", label: "Funding", icon: <DollarSign className="w-5 h-5" /> },
