@@ -1,330 +1,254 @@
-// "use client";
-
-// import { useEffect, useMemo, useState } from "react";
-// import { getMyTasks, updateTaskStatus, deleteTask } from "@/lib/api"; // make sure deleteTask is defined
-
-// export default function MyTasksPage() {
-//   const [tasks, setTasks] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [updating, setUpdating] = useState(null); // taskId while updating
-//   const [error, setError] = useState("");
-
-//   const reload = async () => {
-//     try {
-//       setLoading(true);
-//       setError("");
-//       const data = await getMyTasks();
-//       setTasks(Array.isArray(data) ? data : []);
-//     } catch (e) {
-//       console.error(e);
-//       setError("Failed to load tasks");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     reload();
-//   }, []);
-
-//   const completedCount = useMemo(
-//     () => tasks.filter((t) => t.status === "Completed").length,
-//     [tasks]
-//   );
-//   const progress = useMemo(
-//     () => (tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0),
-//     [tasks, completedCount]
-//   );
-
-//   const markCompleted = async (taskId) => {
-//     if (!confirm("Mark this task as Completed?")) return;
-//     try {
-//       setUpdating(taskId);
-//       await updateTaskStatus(taskId, "Completed");
-//       await reload();
-//     } catch (e) {
-//       console.error(e);
-//       alert("Failed to update task status");
-//     } finally {
-//       setUpdating(null);
-//     }
-//   };
-
-//   const removeTask = async (taskId) => {
-//     if (!confirm("Remove this completed task?")) return;
-//     try {
-//       setUpdating(taskId);
-//       await deleteTask(taskId); // make sure deleteTask sends DELETE to /tasks/<id>/
-//       await reload();
-//     } catch (e) {
-//       console.error(e);
-//       alert("Failed to remove task");
-//     } finally {
-//       setUpdating(null);
-//     }
-//   };
-
-//   return (
-//     <div className="p-6 max-w-3xl mx-auto">
-//       <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
-
-//       {error && <div className="mb-4 bg-red-100 text-red-700 p-2 rounded">{error}</div>}
-
-//       <div className="mb-6">
-//         <div className="flex items-center justify-between mb-1">
-//           <span className="text-sm text-gray-600">
-//             Progress: {completedCount}/{tasks.length} completed
-//           </span>
-//           <span className="text-sm font-semibold">{progress}%</span>
-//         </div>
-//         <div className="w-full bg-gray-200 rounded-full h-3">
-//           <div
-//             className="h-3 rounded-full bg-green-500 transition-all"
-//             style={{ width: `${progress}%` }}
-//           />
-//         </div>
-//       </div>
-
-//       {loading ? (
-//         <p>Loading…</p>
-//       ) : tasks.length === 0 ? (
-//         <p className="text-gray-600">No tasks assigned yet.</p>
-//       ) : (
-//         <ul className="space-y-3">
-//           {tasks.map((t) => (
-//             <li key={t.id} className="border rounded-xl p-4">
-//               <div className="flex items-start justify-between gap-3">
-//                 <div>
-//                   <p className="font-medium">{t.description}</p>
-//                   {t.project?.name && (
-//                     <p className="text-sm text-gray-500 mt-1">
-//                       Project: {t.project.name}
-//                     </p>
-//                   )}
-//                   <p className="text-sm mt-1">
-//                     Status:{" "}
-//                     <span
-//                       className={
-//                         t.status === "Completed"
-//                           ? "text-green-600"
-//                           : t.status === "In Progress"
-//                           ? "text-yellow-600"
-//                           : "text-gray-700"
-//                       }
-//                     >
-//                       {t.status}
-//                     </span>
-//                   </p>
-//                 </div>
-
-//                 <div className="flex items-center gap-2">
-//                   {t.status !== "Completed" && (
-//                     <button
-//                       disabled={updating === t.id}
-//                       onClick={() => markCompleted(t.id)}
-//                       className="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-60"
-//                     >
-//                       {updating === t.id ? "Saving…" : "Mark Completed"}
-//                     </button>
-//                   )}
-
-//                   {t.status === "Completed" && (
-//                     <button
-//                       disabled={updating === t.id}
-//                       onClick={() => removeTask(t.id)}
-//                       className="px-3 py-1 rounded bg-red-600 text-white disabled:opacity-60"
-//                     >
-//                       {updating === t.id ? "Removing…" : "Remove"}
-//                     </button>
-//                   )}
-//                 </div>
-//               </div>
-//             </li>
-//           ))}
-//         </ul>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
 "use client";
-
-import { useEffect, useMemo, useState } from "react";
-import { getMyTasks, updateTaskStatus, deleteTask } from "@/lib/api";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  getProjectsWithTasks,
+  markTaskCompleted,
+  removeProject,
+  uploadTaskDocument,
+} from "@/lib/api";
 
 export default function MyTasksPage() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(null);
-  const [error, setError] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [expanded, setExpanded] = useState({});
+  const [uploading, setUploading] = useState({});
   const [darkMode, setDarkMode] = useState(false);
-
-  const reload = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const data = await getMyTasks();
-      setTasks(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-      setError("Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    reload();
+    fetchProjects();
   }, []);
 
-  const completedCount = useMemo(
-    () => tasks.filter((t) => t.status === "Completed").length,
-    [tasks]
-  );
-  const progress = useMemo(
-    () =>
-      tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0,
-    [tasks, completedCount]
-  );
+  const fetchProjects = async () => {
+    const data = await getProjectsWithTasks();
+    setProjects(data);
+  };
 
-  const markCompleted = async (taskId) => {
-    if (!confirm("Mark this task as Completed?")) return;
+  const toggleExpand = (projectId) => {
+    setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+  };
+
+  const handleMarkDone = async (taskId, projectId) => {
     try {
-      setUpdating(taskId);
-      await updateTaskStatus(taskId, "Completed");
-      await reload();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to update task status");
-    } finally {
-      setUpdating(null);
+      await markTaskCompleted(taskId);
+      setProjects((prevProjects) =>
+        prevProjects.map((project) => {
+          if (project.id === projectId) {
+            return {
+              ...project,
+              tasks: project.tasks.filter((task) => task.id !== taskId),
+            };
+          }
+          return project;
+        })
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Task not found or already deleted");
     }
   };
 
-  const removeTask = async (taskId) => {
-    if (!confirm("Remove this completed task?")) return;
+  const handleRemoveProject = async (projectId) => {
     try {
-      setUpdating(taskId);
-      await deleteTask(taskId);
-      await reload();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to remove task");
-    } finally {
-      setUpdating(null);
+      await removeProject(projectId);
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    } catch (err) {
+      console.error(err);
+      alert("Cannot remove project: some tasks are incomplete");
     }
   };
+
+  const handleFileUpload = async (taskId, file) => {
+    setUploading((prev) => ({ ...prev, [taskId]: true }));
+    await uploadTaskDocument(taskId, file);
+    setUploading((prev) => ({ ...prev, [taskId]: false }));
+    fetchProjects();
+  };
+
+  const shapes = [
+    { top: "10%", left: "5%", size: "w-40 h-40", color: "bg-indigo-300", delay: "0s" },
+    { top: "20%", left: "70%", size: "w-56 h-56", color: "bg-pink-300", delay: "1s" },
+    { top: "60%", left: "30%", size: "w-32 h-32", color: "bg-purple-400", delay: "2s" },
+  ];
 
   return (
-    <div
-      className={`relative min-h-screen p-6 transition-colors duration-300 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-      }`}
+    <div className={`min-h-screen relative overflow-hidden ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+      
+      {/* NAVBAR */}
+      <nav className="w-full bg-white dark:bg-gray-900 shadow-md fixed top-0 left-0 z-50 h-20">
+  <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center h-full">
+    {/* Logo */}
+    <img
+      src="/logowb.png"
+      alt="Company Logo"
+      className="h-35 w-45"
+    />
+
+    {/* Menu links */}
+    <div className="hidden md:flex items-center gap-6">
+      <Link
+        href="/"
+        className="text-gray-700 dark:text-gray-200 hover:text-indigo-500 transition"
+      >
+        Home
+      </Link>
+      <Link
+        href="/my-tasks"
+        className="text-gray-700 dark:text-gray-200 hover:text-indigo-500 transition"
+      >
+        My Tasks
+      </Link>
+    </div>
+
+    {/* Dark mode toggle */}
+    <button
+      onClick={() => setDarkMode(!darkMode)}
+      className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg hover:bg-indigo-700 transition"
     >
-      {/* Animated Blue Shapes Background */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-500 opacity-30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-indigo-400 opacity-30 rounded-full blur-3xl animate-bounce"></div>
-      </div>
+      {darkMode ? "☀️ Light" : "🌙 Dark"}
+    </button>
 
-      {/* Dark/Light Mode Toggle */}
-      <div className="absolute top-6 right-6 z-50">
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg hover:bg-indigo-700 transition"
-        >
-          {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-        </button>
-      </div>
+    {/* Mobile menu button */}
+    <button
+      className="md:hidden text-gray-700 dark:text-gray-200 ml-2"
+      onClick={() => setMenuOpen(!menuOpen)}
+    >
+      {menuOpen ? "✖" : "☰"}
+    </button>
+  </div>
 
-      {/* Main Content */}
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
+  {/* Mobile Menu */}
+  {menuOpen && (
+    <div className="md:hidden px-6 pb-4 flex flex-col gap-4 bg-white dark:bg-gray-900">
+      <Link
+        href="/"
+        className="text-gray-700 dark:text-gray-200 hover:text-indigo-500 transition"
+      >
+        Home
+      </Link>
+      <Link
+        href="/my-tasks"
+        className="text-gray-700 dark:text-gray-200 hover:text-indigo-500 transition"
+      >
+        My Tasks
+      </Link>
+    </div>
+  )}
+</nav>
+      {/* "My Tasks" Header below navbar */}
+      <h1 className="text-5xl font-extrabold text-royalblue mt-24 mb-10 relative z-10 drop-shadow-lg text-center">
+        My Tasks
+      </h1>
 
-        {error && (
-          <div className="mb-4 bg-red-100 text-red-700 p-2 rounded">
-            {error}
-          </div>
-        )}
+      {/* Animated shapes */}
+      {shapes.map((shape, index) => (
+        <div
+          key={index}
+          className={`absolute ${shape.size} ${shape.color} rounded-full opacity-20 animate-scale`}
+          style={{ top: shape.top, left: shape.left, animationDelay: shape.delay }}
+        ></div>
+      ))}
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Progress: {completedCount}/{tasks.length} completed
-            </span>
-            <span className="text-sm font-semibold">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+      {/* Projects */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
+        {projects.map((project) => {
+          const completedTasks = project.tasks.filter(
+            (t) => t.status.toLowerCase() === "completed"
+          ).length;
+          const allCompleted = completedTasks === project.tasks.length;
+
+          return (
             <div
-              className="h-3 rounded-full bg-green-500 transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {loading ? (
-          <p>Loading…</p>
-        ) : tasks.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">
-            No tasks assigned yet.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {tasks.map((t) => (
-              <li key={t.id} className="border rounded-xl p-4 dark:border-gray-600">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{t.description}</p>
-                    {t.project?.name && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Project: {t.project.name}
-                      </p>
-                    )}
-                    <p className="text-sm mt-1">
-                      Status:{" "}
-                      <span
-                        className={
-                          t.status === "Completed"
-                            ? "text-green-600"
-                            : t.status === "In Progress"
-                            ? "text-yellow-600"
-                            : "text-gray-700"
-                        }
-                      >
-                        {t.status}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {t.status !== "Completed" && (
-                      <button
-                        disabled={updating === t.id}
-                        onClick={() => markCompleted(t.id)}
-                        className="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-60"
-                      >
-                        {updating === t.id ? "Saving…" : "Mark Completed"}
-                      </button>
-                    )}
-
-                    {t.status === "Completed" && (
-                      <button
-                        disabled={updating === t.id}
-                        onClick={() => removeTask(t.id)}
-                        className="px-3 py-1 rounded bg-red-600 text-white disabled:opacity-60"
-                      >
-                        {updating === t.id ? "Removing…" : "Remove"}
-                      </button>
-                    )}
+              key={project.id}
+              className={`border rounded-3xl px-10 py-8 mb-8 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:shadow-indigo-400 ${
+                darkMode
+                  ? "bg-gray-800 border-gray-700 text-white"
+                  : "bg-white/90 border-gray-200 text-gray-900"
+              }`}
+            >
+              <div
+                className="flex justify-between items-start cursor-pointer"
+                onClick={() => toggleExpand(project.id)}
+              >
+                <div className="flex-1">
+                  <h2 className="text-2xl font-semibold">{project.name}</h2>
+                  <p className="text-sm mt-1">Deadline: {project.deadline}</p>
+                  <p className="text-sm mt-1">
+                    Progress: {completedTasks}/{project.tasks.length} completed
+                  </p>
+                  <div className="w-full bg-gray-300 h-3 rounded mt-3 overflow-hidden">
+                    <div
+                      className="bg-green-500 h-3 rounded transition-all duration-500"
+                      style={{ width: `${(completedTasks / project.tasks.length) * 100}%` }}
+                    ></div>
                   </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+
+                {allCompleted && (
+                  <button
+                    className="text-red-600 font-bold ml-4 hover:underline"
+                    onClick={() => handleRemoveProject(project.id)}
+                  >
+                    Remove Project
+                  </button>
+                )}
+              </div>
+
+              {expanded[project.id] && (
+                <div className="mt-6 pl-6 border-l border-gray-300">
+                  {project.tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="mb-4 p-4 rounded-xl bg-gray-100 dark:bg-gray-700 shadow-md flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {task.description}{" "}
+                          {task.requires_document && !task.document && (
+                            <span className="text-red-500">(Document required)</span>
+                          )}
+                          {task.document && (
+                            <span className="text-green-500">(Document uploaded)</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {task.status.toLowerCase() !== "completed" && (
+                          <button
+                            className="bg-green-500 text-white px-2 py-1 rounded"
+                            onClick={() => handleMarkDone(task.id, project.id)}
+                          >
+                            Mark as Done
+                          </button>
+                        )}
+                        {task.requires_document && !task.document && (
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileUpload(task.id, e.target.files[0])}
+                            disabled={uploading[task.id]}
+                            className="text-sm"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      <style jsx global>{`
+        @keyframes scaleAnim {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.5); }
+        }
+        .animate-scale {
+          animation: scaleAnim 8s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

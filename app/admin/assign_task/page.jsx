@@ -14,9 +14,12 @@ export default function TaskAssignPage() {
   const [projectName, setProjectName] = useState("");
   const [projectType, setProjectType] = useState("individual");
   const [deadline, setDeadline] = useState("");
-  const [tasks, setTasks] = useState([{ description: "", assignedTo: [] }]);
+  const [tasks, setTasks] = useState([
+    { description: "", assignedTo: [], requires_document: false, document: null },
+  ]);
   const [error, setError] = useState("");
   const [darkMode, setDarkMode] = useState(true);
+  const [adminFile, setAdminFile] = useState(null);
 
   // Fetch employees
   useEffect(() => {
@@ -61,7 +64,10 @@ export default function TaskAssignPage() {
   };
 
   const addTask = () => {
-    setTasks((prev) => [...prev, { description: "", assignedTo: [] }]);
+    setTasks((prev) => [
+      ...prev,
+      { description: "", assignedTo: [], requires_document: false, document: null },
+    ]);
   };
 
   const removeTask = (index) => {
@@ -91,26 +97,41 @@ export default function TaskAssignPage() {
       setError(msg);
       return;
     }
+
     try {
       setLoading(true);
-      const project = await createProject({
-        name: projectName.trim(),
-        type: projectType,
-        deadline,
-      });
 
+      // Create project (FormData if file exists)
+      const formData = new FormData();
+      formData.append("name", projectName.trim());
+      formData.append("type", projectType);
+      formData.append("deadline", deadline);
+      if (adminFile) formData.append("file", adminFile);
+
+      const project = await createProject(formData, true); // multipart/form-data
+
+      // Create tasks
       for (const t of tasks) {
-        await createTask({
-          project: project.id,
-          description: t.description.trim(),
-          assigned_to_ids: t.assignedTo,
-        });
+        const taskData = new FormData();
+        taskData.append("project_id", project.id); // ✅ use project_id
+        taskData.append("description", t.description.trim());
+        taskData.append("requires_document", String(t.requires_document));
+
+        // Assigned users
+        t.assignedTo.forEach((id) => taskData.append("assigned_to_ids", id));
+
+        // Optional task document
+        if (t.document) taskData.append("document", t.document);
+
+        await createTask(taskData, true); // multipart/form-data
       }
 
+      // Reset form
       setProjectName("");
       setProjectType("individual");
       setDeadline("");
-      setTasks([{ description: "", assignedTo: [] }]);
+      setTasks([{ description: "", assignedTo: [], requires_document: false, document: null }]);
+      setAdminFile(null);
       alert("Project and tasks created successfully ✨");
     } catch (err) {
       console.error(err);
@@ -128,21 +149,7 @@ export default function TaskAssignPage() {
           : "bg-gradient-to-br from-purple-100 via-blue-100 to-green-100 text-black"
       }`}
     >
-      {/* Glowing animated background blobs */}
-     {/* Glowing animated background blobs (high visibility) */}
-<div className="absolute inset-0 -z-10 overflow-hidden">
-  <div className="absolute -top-40 -left-40 w-[500px] h-[500px] 
-    bg-purple-400/80 rounded-full blur-[120px] animate-[float_10s_ease-in-out_infinite]"></div>
-
-  <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] 
-    bg-blue-400/80 rounded-full blur-[120px] animate-[float_12s_ease-in-out_infinite]"></div>
-
-  <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] 
-    bg-pink-400/80 rounded-full blur-[120px] animate-[float_15s_ease-in-out_infinite]"></div>
-</div>
-
-
-      {/* Toggle Button */}
+      {/* Toggle Dark Mode */}
       <div className="absolute top-6 right-6 z-50">
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -152,29 +159,23 @@ export default function TaskAssignPage() {
         </button>
       </div>
 
-      {/* Card */}
+      {/* Form Card */}
       <div
         className={`p-6 max-w-4xl mx-auto rounded-2xl shadow-xl transform transition-all duration-500 ${
-          darkMode ? "bg-gray-800/90 backdrop-blur text-white shadow-indigo-500/20" 
-                   : "bg-white/80 backdrop-blur text-gray-900 shadow-xl"
+          darkMode
+            ? "bg-gray-800/90 backdrop-blur text-white shadow-indigo-500/20"
+            : "bg-white/80 backdrop-blur text-gray-900 shadow-xl"
         }`}
       >
         <h1 className="text-2xl font-bold mb-2">Assign Project & Tasks</h1>
-        <p
-          className={`text-sm mb-6 ${
-            darkMode ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
+        <p className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
           {typeHint}
         </p>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-100 p-3 text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 rounded-lg bg-red-100 p-3 text-red-700">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Project Name */}
           <div>
             <label className="block text-sm font-medium mb-1">Project Name</label>
             <input
@@ -191,6 +192,7 @@ export default function TaskAssignPage() {
             />
           </div>
 
+          {/* Project Type + Deadline */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Project Type</label>
@@ -224,6 +226,21 @@ export default function TaskAssignPage() {
             </div>
           </div>
 
+          {/* Admin File Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Upload File (Admin)</label>
+            <input
+              type="file"
+              onChange={(e) => setAdminFile(e.target.files[0])}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 
+                         file:px-4 file:rounded-full file:border-0
+                         file:text-sm file:font-semibold
+                         file:bg-indigo-50 file:text-indigo-700
+                         hover:file:bg-indigo-100"
+            />
+          </div>
+
+          {/* Tasks Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Tasks</h2>
@@ -244,9 +261,7 @@ export default function TaskAssignPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Task #{index + 1}
-                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Task #{index + 1}</span>
                   {tasks.length > 1 && (
                     <button
                       type="button"
@@ -258,14 +273,13 @@ export default function TaskAssignPage() {
                   )}
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Description</label>
                   <input
                     type="text"
                     value={task.description}
-                    onChange={(e) =>
-                      handleTaskChange(index, "description", e.target.value)
-                    }
+                    onChange={(e) => handleTaskChange(index, "description", e.target.value)}
                     className={`p-2 w-full rounded transition-colors ${
                       darkMode
                         ? "bg-gray-600 border border-gray-500 text-white placeholder-gray-400"
@@ -276,17 +290,14 @@ export default function TaskAssignPage() {
                   />
                 </div>
 
+                {/* Assign Employees */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Assign Employee{projectType === "group" ? "(s)" : ""}
                   </label>
                   <select
                     multiple={projectType === "group"}
-                    value={
-                      projectType === "group"
-                        ? task.assignedTo
-                        : task.assignedTo[0] || ""
-                    }
+                    value={projectType === "group" ? task.assignedTo : task.assignedTo[0] || ""}
                     onChange={(e) =>
                       handleTaskChange(
                         index,
@@ -311,6 +322,34 @@ export default function TaskAssignPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Task Document */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Upload Task Document (optional)</label>
+                  <input
+                    type="file"
+                    onChange={(e) => handleTaskChange(index, "document", e.target.files[0])}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 
+                               file:px-4 file:rounded-full file:border-0
+                               file:text-sm file:font-semibold
+                               file:bg-indigo-50 file:text-indigo-700
+                               hover:file:bg-indigo-100"
+                  />
+                </div>
+
+                {/* Require File */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={task.requires_document}
+                    onChange={(e) =>
+                      handleTaskChange(index, "requires_document", e.target.checked)
+                    }
+                  />
+                  <label className="text-sm">
+                    Require employee to upload file for this task
+                  </label>
                 </div>
               </div>
             ))}
