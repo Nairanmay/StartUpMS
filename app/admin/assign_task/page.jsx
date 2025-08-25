@@ -22,32 +22,33 @@ export default function TaskAssignPage() {
   const [adminFile, setAdminFile] = useState(null);
 
   // Fetch employees
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const token = localStorage.getItem("access");
-        if (!token) {
-          setError("Missing authentication token");
-          return;
-        }
-        const userRes = await getUser(token);
-        const companyCode = userRes.data?.company_code;
-        if (!companyCode) {
-          setError("Company code not found in user profile");
-          return;
-        }
-        const res = await getUsersByCompany(companyCode, token);
-        if (mounted) setEmployees(res.data || []);
-      } catch (e) {
-        console.error(e);
-        if (mounted) setError("Failed to load employees");
+useEffect(() => {
+  let mounted = true;
+  (async () => {
+    try {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        setError("Missing authentication token");
+        return;
       }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+      const userRes = await getUser(token);
+      const companyCode = userRes.data?.company_code;
+      if (!companyCode) {
+        setError("Company code not found in user profile");
+        return;
+      }
+
+      const employeesList = await getUsersByCompany(companyCode);
+      if (mounted) setEmployees(employeesList || []);
+    } catch (e) {
+      console.error(e);
+      if (mounted) setError("Failed to load employees");
+    }
+  })();
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   const typeHint = useMemo(
     () =>
