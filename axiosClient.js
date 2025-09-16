@@ -10,9 +10,12 @@ const axiosClient = axios.create({
 // Request interceptor to attach access token
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // This check is important to avoid errors when Next.js runs code on the server.
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('access');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
     return config;
   },
@@ -33,7 +36,9 @@ axiosClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh');
         if (!refreshToken) {
-          // No refresh token, logout or redirect user to login
+          // If there's no refresh token, the user must log in again.
+          console.error("No refresh token found. Redirecting to login.");
+          window.location.href = '/login'; 
           return Promise.reject(error);
         }
 
@@ -45,11 +50,15 @@ axiosClient.interceptors.response.use(
         const { access } = response.data;
         localStorage.setItem('access', access);
 
-        // Update the Authorization header and retry original request
+        // Update the Authorization header and retry the original request
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return axiosClient(originalRequest);
       } catch (refreshError) {
-        // Refresh token failed, logout or redirect to login
+        // If the refresh token itself is invalid, the session is over.
+        console.error("Token refresh failed. Logging out user.", refreshError);
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }
@@ -59,3 +68,4 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
+

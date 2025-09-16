@@ -113,6 +113,15 @@ export default function AdminDashboard() {
               description="Assign tasks to employees and track progress."
             />
           </Link>
+          <Link href="/admin/captable" className="group">
+            <ActionCard
+              icon={
+                <ClipboardCheck className="w-14 h-14 text-blue-400 group-hover:text-pink-500 transition" />
+              }
+              title="Cap Table"
+              description="Assign tasks to employees and track progress."
+            />
+          </Link>
         </div>
       </div>
 
