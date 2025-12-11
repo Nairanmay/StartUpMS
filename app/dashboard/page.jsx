@@ -15,7 +15,7 @@ export default function Dashboard() {
   const userNavItems = [
     { href: "/dashboard", label: "Home", icon: <Home className="w-5 h-5" /> },
     { href: "/view_task", label: "Tasks", icon: <ClipboardList className="w-5 h-5" /> },
-    // { href: "/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
+    { href: "/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
     // { href: "/company", label: "Company", icon: <Building className="w-5 h-5" /> },
   ];
 
