@@ -122,6 +122,15 @@ export default function AdminDashboard() {
               description="Assign tasks to employees and track progress."
             />
           </Link>
+          <Link href="/admin/documents" className="group">
+            <ActionCard
+              icon={
+                <ClipboardCheck className="w-14 h-14 text-blue-400 group-hover:text-pink-500 transition" />
+              }
+              title="Documents"
+              description="Store, search, and manage company files and assets."
+            />
+          </Link>
         </div>
       </div>
 
