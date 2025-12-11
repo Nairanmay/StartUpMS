@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { getUser } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { ClipboardList, FileText, Building, Home, LogOut } from "lucide-react";
+// import { ClipboardList, FileText, Building, Home, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-
+import { ClipboardList, FileText, Building2, Home, LogOut } from "lucide-react";
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
