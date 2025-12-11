@@ -147,6 +147,7 @@ function Sidebar({ user }) {
     { href: "/admin/pitch-deck", label: "Pitch Deck", icon: <FileText className="w-5 h-5" /> },
     { href: "/admin/funding-suggestions", label: "Funding", icon: <DollarSign className="w-5 h-5" /> },
     { href: "/admin/assign_task", label: "Tasks", icon: <ClipboardCheck className="w-5 h-5" /> },
+    { href: "/admin/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> }, // Add this line
   ];
 
   return (
