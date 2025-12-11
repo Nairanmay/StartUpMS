@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Home,
   LogOut,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -157,6 +158,7 @@ function Sidebar({ user }) {
     { href: "/admin/funding-suggestions", label: "Funding", icon: <DollarSign className="w-5 h-5" /> },
     { href: "/admin/assign_task", label: "Tasks", icon: <ClipboardCheck className="w-5 h-5" /> },
     { href: "/admin/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> }, // Add this line
+    { href: "/admin/business_details", label: "Business Profile", icon: <Building2 className="w-5 h-5" /> }
   ];
 
   return (

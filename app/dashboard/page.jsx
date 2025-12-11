@@ -17,6 +17,7 @@ export default function Dashboard() {
     { href: "/view_task", label: "Tasks", icon: <ClipboardList className="w-5 h-5" /> },
     { href: "/dashboard/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
     // { href: "/company", label: "Company", icon: <Building className="w-5 h-5" /> },
+    { href: "/dashboard/business_details", label: "Company Info", icon: <Building2 className="w-5 h-5" /> }
   ];
 
   useEffect(() => {
