@@ -137,19 +137,23 @@ export default function Dashboard() {
           </Link>
 
           {/* Documents Card */}
-          {/* <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
-            <div className="flex items-center mb-4">
-              <div className="p-3 bg-green-100 text-green-600 rounded-full">
-                <FileText size={28} />
-              </div>
-              <h2 className="ml-4 text-2xl font-semibold text-gray-900">
-                Documents
-              </h2>
-            </div>
-            <p className="text-gray-600">
-              Access and upload important company documents.
-            </p>
-          </div> */}
+          <Link href="/dashboard/documents" className="group">
+  <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
+    <div className="flex items-center mb-4">
+      <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+        {/* Changed icon to FileText for documents */}
+        <FileText size={28} />
+      </div>
+      <h2 className="ml-4 text-2xl font-semibold text-gray-900">
+        Documents
+      </h2>
+    </div>
+    <p className="text-gray-600">
+      Store, search, and manage company files and assets.
+    </p>
+  </div>
+</Link>
+
 
           {/* Company Details Card */}
           {/* <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 cursor-pointer">
