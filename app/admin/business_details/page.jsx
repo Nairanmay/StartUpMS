@@ -26,10 +26,20 @@ export default function AdminBusinessDetails() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    
+    // Create a copy of the data to modify
+    const payload = { ...formData };
+
+    // Convert empty date string to null so Django accepts it
+    if (payload.founded_date === "") {
+      payload.founded_date = null;
+    }
+
     try {
-      await updateCompanyProfile(formData);
+      await updateCompanyProfile(payload); // Send the cleaned payload
       alert("Business details updated successfully!");
     } catch (error) {
+      console.error(error);
       alert("Failed to update details.");
     } finally {
       setSaving(false);
