@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser, getUser } from "@/lib/api";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import Lottie from "lottie-react";
-import animationData from "../animations/login-character.json";
+import { motion } from "framer-motion";
 import Link from "next/link";
+import animationData from "../animations/login-character.json";
 
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
@@ -27,8 +28,6 @@ export default function LoginPage() {
 
     try {
       const { data } = await loginUser(username, password);
-      console.log("Login success:", data);
-
       localStorage.setItem("access", data.access);
       localStorage.setItem("refresh", data.refresh);
 
@@ -41,178 +40,122 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
       setError("Invalid username or password");
     } finally {
       setLoading(false);
     }
   };
 
-
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
-      {/* Moving Gradient Background */}
-      {/* Moving Gradient Background */}
-<div className="absolute inset-0 bg-gradient-to-br from-[#A0D8F1] via-[#C2B9F0] to-[#FFB28A] animate-gradient bg-[length:200%_200%]"></div>
+    <div className="min-h-screen flex bg-slate-50">
+      {/* --- LEFT SIDE: Visuals --- */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0D2A4D] relative overflow-hidden flex-col justify-between p-12 text-white">
+        {/* Background Patterns */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('/globe.svg')] bg-cover bg-center"></div>
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#FF6B1A] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
-{/* Subtle Dark Accent Gradient */}
-<div className="absolute inset-0 bg-gradient-to-br from-[#123B70]/10 via-[#0A243F]/10 to-[#FF7A33]/10 animate-gradient bg-[length:200%_200%] mix-blend-soft-light"></div>
+        {/* Logo Area */}
+        <div className="relative z-10 flex items-center gap-2">
+           <img src="/logowb.png" alt="Logo" className="w-10 h-auto" />
+           <span className="font-bold text-xl tracking-tight">Startify</span>
+        </div>
 
-{/* Darker Floating Circles */}
-<div className="absolute top-16 left-16 w-72 h-72 bg-[#123B70]/20 rounded-full animate-pulse-slow"></div>
-<div className="absolute bottom-20 right-16 w-80 h-80 bg-[#0A243F]/15 rounded-full animate-pulse-slow"></div>
-<div className="absolute top-1/3 left-2/3 w-60 h-60 bg-[#FF7A33]/10 rounded-full animate-pulse-slow"></div>
+        {/* Center Content */}
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="bg-white/5 backdrop-blur-sm p-8 rounded-full mb-8 shadow-2xl border border-white/10">
+            <Lottie animationData={animationData} loop={true} className="w-64 h-64" />
+          </div>
+          <h2 className="text-3xl font-bold mb-4">Welcome back, Founder! 🚀</h2>
+          <p className="text-blue-100 max-w-md leading-relaxed">
+            Access your dashboard to track tasks, manage equity, and secure your next round of funding.
+          </p>
+        </div>
 
-{/* Additional Dark Animated Shapes */}
-<div className="absolute top-16 left-16 w-56 h-56 bg-[#123B70]/25 rounded-full animate-pulse-slow"></div>
-<div className="absolute bottom-20 right-16 w-64 h-64 bg-[#0A243F]/20 rounded-full animate-pulse-slow"></div>
-<div className="absolute top-1/3 left-2/3 w-44 h-44 bg-[#FF7A33]/15 rounded-full animate-pulse-slow"></div>
+        {/* Footer */}
+        <div className="relative z-10 text-sm text-blue-200/60">
+          © {new Date().getFullYear()} Startify Inc.
+        </div>
+      </div>
 
-<style jsx>{`
-  @keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .animate-gradient {
-    animation: gradientMove 12s ease infinite;
-  }
+      {/* --- RIGHT SIDE: Form --- */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
+        <Link href="/" className="absolute top-8 left-8 text-slate-400 hover:text-slate-600 flex items-center gap-2 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </Link>
 
-  @keyframes pulseSlow {
-    0%, 100% { transform: scale(1); opacity: 0.6; }
-    50% { transform: scale(1.3); opacity: 0.3; }
-  }
-  .animate-pulse-slow {
-    animation: pulseSlow 14s ease-in-out infinite;
-  }
-`}</style>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100"
+        >
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Sign in</h1>
+            <p className="text-slate-500">Enter your details to access your account</p>
+          </div>
 
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium text-center">
+              {error}
+            </div>
+          )}
 
-      {/* Glass effect container */}
-     {/* Glass effect container */}
-<div className="relative z-10 flex flex-col md:flex-row items-center gap-16 px-8">
-  
-  {/* Character Animation */}
-  <div className="z-10 flex flex-col items-center text-center mb-1 px-4">
-  <h1 className="text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg">
-    Welcome to <span className="text-yellow-300">Startify</span>
-  </h1>
-  <p className="text-lg md:text-xl text-black-200 mt-2 font-bold">
-    Where startups get started 🚀
-  </p>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
 
-  {/* Existing Lottie Animation */}
-  <Lottie animationData={animationData} loop={true} className="w-64 h-64 md:w-150 md:h-150 " />
-</div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-semibold text-slate-700">Password</label>
+                <a href="#" className="text-sm font-medium text-[#FF6B1A] hover:text-orange-600">Forgot password?</a>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
 
-  {/* Login Box */}
- <div className="w-[500px] h-[640px] p-14 pt-6 rounded-2xl bg-black/20 backdrop-blur-2xl shadow-2xl border border-white/30 flex flex-col items-center text-center">
-  {/* Logo */}
-  <img
-    src="/logowb.png"
-    alt="Logo"
-    className="w-54 h-54 object-contain "
-  />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FF6B1A] hover:bg-[#e05a15] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-orange-200 flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : "Sign In"}
+            </button>
+          </form>
 
-  <h1 className="text-5xl font-extrabold text-white mb-10 pb-6 drop-shadow-lg">
-    Login
-  </h1>
-  {error && <p className="text-red-400 font-semibold mb-4">{error}</p>}
-
-  <form onSubmit={handleLogin} className="flex flex-col gap-8 w-full">
-    {/* Username */}
-    <input
-      type="text"
-      placeholder="Username"
-      value={username}
-      onChange={(e) => setUsername(e.target.value)}
-      className="w-full p-5 rounded-lg border-2 border-gray-500 bg-black/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-inner"
-      required
-    />
-
-    {/* Password */}
-    <div className="relative">
-      <input
-        type={showPassword ? "text" : "password"}
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full p-5 rounded-lg border-2 border-gray-500 bg-black/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-inner"
-        required
-      />
-      <button
-        type="button"
-        onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
-      >
-        {showPassword ? <EyeOff /> : <Eye />}
-      </button>
-    </div>
-
-    {/* Submit Button */}
-    <button
-      type="submit"
-      disabled={loading}
-      className="bg-gradient-to-r from-purple-700 to-purple-900 hover:from-purple-800 hover:to-purple-950 text-white font-semibold p-5 rounded-lg transition-all duration-300 flex justify-center text-lg shadow-lg hover:scale-105"
-    >
-      {loading ? (
-        <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-      ) : (
-        "Login"
-      )}
-    </button>
-  </form>
-
-  {/* ✅ Don't have an account? */}
-  <p className="text-gray-300 mt-8">
-    Don’t have an account?{" "}
-    <Link
-      href="/register"
-      className="text-yellow-400 hover:text-yellow-300 font-semibold transition-colors"
-    >
-      Create one
-    </Link>
-  </p>
-</div>
-
-</div>
-
-
-      {/* Animations */}
-      <style jsx>{`
-        @keyframes gradientMove {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        .animate-gradient {
-          animation: gradientMove 6s ease infinite;
-        }
-        @keyframes pulseSlow {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 0.7;
-          }
-          50% {
-            transform: scale(1.3);
-            opacity: 0.4;
-          }
-        }
-        .animate-pulse-slow {
-          animation: pulseSlow 8s ease-in-out infinite;
-        }
-      `}</style>
+          <p className="mt-8 text-center text-slate-500 text-sm">
+            Don’t have an account?{" "}
+            <Link href="/register" className="font-bold text-[#FF6B1A] hover:text-orange-600">
+              Create one
+            </Link>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
