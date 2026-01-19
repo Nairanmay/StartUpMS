@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-// 👇 Import getPitchDeckAnalysis
 import { getUser, getUsersByCompany, getMyTasks, getPitchDeckAnalysis } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import {
@@ -18,7 +17,7 @@ export default function AdminDashboard() {
   // Data State
   const [employees, setEmployees] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [pitchScore, setPitchScore] = useState(null); // State for score
+  const [pitchScore, setPitchScore] = useState(null);
   
   // Interactive State
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,20 +57,20 @@ export default function AdminDashboard() {
         // 2. Fetch Company Data & Pitch Deck
         if (userRes.data.company_code) {
           const [usersData, tasksData, pitchData] = await Promise.all([
-            getUsersByCompany(userRes.data.company_code),
-            getMyTasks(),
-            getPitchDeckAnalysis() // Fetch Pitch Deck
+            getUsersByCompany(userRes.data.company_code).catch(() => []),
+            getMyTasks().catch(() => []),
+            getPitchDeckAnalysis().catch(() => null) 
           ]);
 
-          setEmployees(usersData || []);
-          setTasks(tasksData || []);
+          setEmployees(Array.isArray(usersData) ? usersData : []);
+          setTasks(Array.isArray(tasksData) ? tasksData : []);
 
-          // Calculate Pitch Score (Average of ratings)
+          // Calculate Pitch Score
           if (pitchData && pitchData.ratings) {
             const ratings = Object.values(pitchData.ratings);
             if (ratings.length > 0) {
               const total = ratings.reduce((acc, curr) => acc + curr, 0);
-              const avg = Math.round((total / ratings.length) * 10); // Convert 1-10 scale to percentage
+              const avg = Math.round((total / ratings.length) * 10);
               setPitchScore(avg);
             }
           }
@@ -89,7 +88,6 @@ export default function AdminDashboard() {
   // Derived Data
   const pendingTasks = tasks.filter(t => t.status !== 'Completed');
   
-  // Search Logic (kept same as before)
   const allActions = [
     { title: "Manage Users", desc: "Add employees & roles", icon: <Users />, href: "/admin/employee", color: "bg-blue-50 text-blue-600" },
     { title: "Pitch Deck AI", desc: "Analyze deck strength", icon: <FileText />, href: "/admin/pitch-deck", color: "bg-purple-50 text-purple-600" },
@@ -100,18 +98,20 @@ export default function AdminDashboard() {
     { title: "Business Profile", desc: "Edit company details", icon: <Building2 />, href: "/admin/business_details", color: "bg-teal-50 text-teal-600" },
   ];
 
+  // --- SAFE SEARCH LOGIC ---
   const filteredActions = allActions.filter(a => 
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    a.desc.toLowerCase().includes(searchQuery.toLowerCase())
+    (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (a.desc || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredEmployees = employees.filter(e => 
-    e.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (e.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (e.email || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // FIX: Added safe check (t.title || "") to prevent crashes
   const filteredTasks = tasks.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (t.title || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading || !user) {
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
                      {filteredTasks.map((t) => (
                        <div key={t.id} className="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center">
                          <div>
-                            <p className="font-bold text-slate-900">{t.title}</p>
+                            <p className="font-bold text-slate-900">{t.title || "Untitled Task"}</p>
                             <p className="text-xs text-slate-500">{t.description}</p>
                          </div>
                          <span className={`px-2 py-1 rounded-lg text-xs font-bold ${t.status === 'Completed' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
