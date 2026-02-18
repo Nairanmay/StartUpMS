@@ -11,7 +11,17 @@ export const metadata = {
   title: "StartupMS | Manage Your Empire",
   description: "All-in-one startup management solution",
 };
-
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  // Also supported but less common:
+  // themeColor: [
+  //   { media: "(prefers-color-scheme: light)", color: "white" },
+  //   { media: "(prefers-color-scheme: dark)", color: "black" },
+  // ],
+};
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
