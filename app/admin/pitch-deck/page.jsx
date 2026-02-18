@@ -302,8 +302,8 @@ function Sidebar({ user }) {
     <aside className="fixed top-0 left-0 h-screen w-72 bg-white border-r border-slate-100 z-50 flex flex-col">
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
-           <img src="/logowb.png" alt="Logo" className="h-8 w-auto" />
-           <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span>
+           <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
+           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">

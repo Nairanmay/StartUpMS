@@ -30,8 +30,8 @@ function Sidebar({ user }) {
     <aside className="fixed top-0 left-0 h-screen w-72 bg-white border-r border-slate-100 z-50 flex flex-col">
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
-           <img src="/logowb.png" alt="Logo" className="h-8 w-auto" />
-           <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span>
+           <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
+           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
@@ -259,7 +259,7 @@ export default function EmployeePage() {
               <tr>
                 <th className="px-6 py-4">Member</th>
                 <th className="px-6 py-4">Role</th>
-                <th className="px-6 py-4">Status</th>
+                {/* <th className="px-6 py-4">Status</th> */}
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -294,12 +294,12 @@ export default function EmployeePage() {
                         {emp.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                         Active
                       </span>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => handleDelete(emp.id)}

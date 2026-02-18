@@ -69,75 +69,81 @@ export default function LandingPage() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
       
       {/* --- NAVBAR --- */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-3" : "bg-transparent py-5"}`}>
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          
-          {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => scroller.scrollTo("home", { smooth: true })}>
-             <img src="/logowb.png" alt="Startify Logo" className="h-10 w-auto" />
-             <span className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">Startify</span>
-          </div>
+      {/* --- NAVBAR --- */}
+   <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-3" : "bg-transparent py-5"}`}>
+  <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    
+    {/* Logo */}
+    <div className="flex items-center gap-2 cursor-pointer" onClick={() => scroller.scrollTo("home", { smooth: true })}>
+        {/* Kept your requested 100px height with negative margins */}
+        <img src="/logowb.png" alt="Startify Logo" className="h-[110px] w-auto -my-[30px]" />
+        {/* <span className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">Startify</span> */}
+    </div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <ScrollLink
-                key={link.to}
-                to={link.to}
-                smooth={true}
-                duration={800}
-                offset={-80}
-                className="text-sm font-medium text-slate-600 hover:text-[#FF6B1A] cursor-pointer transition-colors"
-              >
-                {link.label}
-              </ScrollLink>
-            ))}
-          </div>
+    {/* Desktop Menu - UPDATED */}
+    {/* Changed gap-8 to gap-12 for more breathing room */}
+    <div className="hidden md:flex items-center gap-12">
+      {navLinks.map((link) => (
+        <ScrollLink
+          key={link.to}
+          to={link.to}
+          smooth={true}
+          duration={800}
+          offset={-80}
+          // UPDATED CLASSES:
+          // text-sm -> text-base (Larger size, approx 16px)
+          // text-slate-600 -> text-slate-800 (Darker, higher contrast)
+          className="text-sm font-bold text-slate-800 hover:text-[#FF6B1A] cursor-pointer transition-colors"
+        >
+          {link.label}
+        </ScrollLink>
+      ))}
+    </div>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">Log In</Link>
-            <Link href="/register" className="bg-[#FF6B1A] hover:bg-[#e05a15] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition shadow-lg shadow-orange-200">
-              Get Started
-            </Link>
-          </div>
+    {/* Auth Buttons - UPDATED */}
+    <div className="hidden md:flex items-center gap-4">
+      {/* <Link href="/login" className="text-base font-medium text-slate-800 hover:text-slate-900">Log In</Link> */}
+      <Link href="/register" className="bg-[#FF6B1A] hover:bg-[#e05a15] text-white px-6 py-3 rounded-full text-base font-semibold transition shadow-lg shadow-orange-200">
+        Get Started
+      </Link>
+    </div>
 
-          {/* Mobile Toggle */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-700">
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
+    {/* Mobile Toggle */}
+    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-700">
+      {isMenuOpen ? <X /> : <Menu />}
+    </button>
+  </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }} 
-              animate={{ height: "auto", opacity: 1 }} 
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+  {/* Mobile Menu */}
+  <AnimatePresence>
+    {isMenuOpen && (
+      <motion.div 
+        initial={{ height: 0, opacity: 0 }} 
+        animate={{ height: "auto", opacity: 1 }} 
+        exit={{ height: 0, opacity: 0 }}
+        className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+      >
+        <div className="flex flex-col p-6 gap-4">
+          {navLinks.map((link) => (
+            <ScrollLink
+              key={link.to}
+              to={link.to}
+              smooth={true}
+              offset={-70}
+              onClick={() => setIsMenuOpen(false)}
+              className="text-slate-700 font-medium py-2 border-b border-gray-50"
             >
-              <div className="flex flex-col p-6 gap-4">
-                {navLinks.map((link) => (
-                  <ScrollLink
-                    key={link.to}
-                    to={link.to}
-                    smooth={true}
-                    offset={-70}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-slate-700 font-medium py-2 border-b border-gray-50"
-                  >
-                    {link.label}
-                  </ScrollLink>
-                ))}
-                <Link href="/register" className="bg-[#FF6B1A] text-white text-center py-3 rounded-xl font-semibold mt-2">
-                  Join Now
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+              {link.label}
+            </ScrollLink>
+          ))}
+          <Link href="/register" className="bg-[#FF6B1A] text-white text-center py-3 rounded-xl font-semibold mt-2">
+            Join Now
+          </Link>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</nav>
 
       {/* --- HERO SECTION --- */}
       <section id="home" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 bg-gradient-to-b from-slate-50 to-white">

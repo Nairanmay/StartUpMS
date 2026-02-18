@@ -80,7 +80,7 @@ export default function RegisterPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-blue-600/30 to-purple-600/30 rounded-full blur-3xl"></div>
 
         <div className="relative z-10 flex items-center gap-2">
-           <img src="/logowb.png" alt="Logo" className="w-10 h-auto" />
+           {/* <img src="/logowb.png" alt="Logo" className="w-10 h-auto" /> */}
            <span className="font-bold text-xl tracking-tight">Startify</span>
         </div>
 
