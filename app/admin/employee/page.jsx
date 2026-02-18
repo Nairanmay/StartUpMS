@@ -205,12 +205,12 @@ export default function EmployeePage() {
             <h1 className="text-3xl font-bold text-slate-900">Team Management</h1>
             <p className="text-slate-500 mt-1">Manage access and roles for your startup members.</p>
           </div>
-          <button 
+          {/* <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-200"
           >
             <UserPlus className="w-4 h-4" /> Add Member
-          </button>
+          </button> */}
         </header>
 
         {/* Stats Row */}

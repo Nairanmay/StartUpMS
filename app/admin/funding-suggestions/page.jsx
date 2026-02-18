@@ -1,22 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   PieChart, Pie, Cell, Tooltip as ReTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from "recharts";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   DollarSign, TrendingUp, PieChart as PieIcon, Activity, 
-  CheckCircle, Briefcase, Building2, Home, Users, 
+  Briefcase, Building2, Home, Users, 
   ClipboardCheck, FileText, Files, LogOut, ChevronRight, Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { getUser } from "@/lib/api";
 
+// --- Main Page Component ---
 export default function FundingPage() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  
+  // State for toggling between Dropdown and Manual Input
+  const [isCustomFund, setIsCustomFund] = useState(false);
+
   const [formData, setFormData] = useState({
     company_name: "",
     company_type: "",
@@ -25,9 +33,6 @@ export default function FundingPage() {
     funds_required: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
   const router = useRouter();
 
   // Auth Check
@@ -52,7 +57,6 @@ export default function FundingPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    // setResult(null); // Optional: Keep previous result visible while loading new one
 
     try {
       const res = await fetch("https://backend-ug9v.onrender.com/api/funding/suggest/", {
@@ -172,23 +176,55 @@ export default function FundingPage() {
                   </select>
                 </div>
 
+                {/* UPDATED: Funds Required (Dropdown + Manual Toggle) */}
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Funds Required (₹)</label>
-                  <select
-                    name="funds_required"
-                    value={formData.funds_required}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
-                    required
-                  >
-                    <option value="">Select Amount</option>
-                    <option value="500000">₹5 Lakhs</option>
-                    <option value="1000000">₹10 Lakhs</option>
-                    <option value="2500000">₹25 Lakhs</option>
-                    <option value="5000000">₹50 Lakhs</option>
-                    <option value="10000000">₹1 Crore</option>
-                    <option value="50000000">₹5 Crores</option>
-                  </select>
+                  {!isCustomFund ? (
+                    <select
+                      name="funds_required"
+                      value={formData.funds_required}
+                      onChange={(e) => {
+                        if (e.target.value === "custom") {
+                          setIsCustomFund(true);
+                          setFormData({ ...formData, funds_required: "" });
+                        } else {
+                          handleChange(e);
+                        }
+                      }}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                      required={!isCustomFund}
+                    >
+                      <option value="">Select Amount</option>
+                      <option value="500000">₹5 Lakhs</option>
+                      <option value="1000000">₹10 Lakhs</option>
+                      <option value="2500000">₹25 Lakhs</option>
+                      <option value="5000000">₹50 Lakhs</option>
+                      <option value="10000000">₹1 Crore</option>
+                      <option value="50000000">₹5 Crores</option>
+                      <option value="custom" className="font-semibold text-blue-600 bg-blue-50">+ Enter Custom Amount</option>
+                    </select>
+                  ) : (
+                    <div className="relative animate-in fade-in zoom-in-95 duration-200">
+                      <input
+                        type="number"
+                        name="funds_required"
+                        value={formData.funds_required}
+                        onChange={handleChange}
+                        placeholder="Enter amount in ₹"
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm pr-24"
+                        required
+                        min="1"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { setIsCustomFund(false); setFormData({ ...formData, funds_required: "" }); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-600 hover:text-blue-800 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        Select List
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -313,7 +349,6 @@ export default function FundingPage() {
 // --- Reused Sidebar Component ---
 function Sidebar({ user }) {
   const router = useRouter();
-  const pathname = usePathname();
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
     { href: "/admin/employee", label: "Users", icon: <Users className="w-5 h-5" /> },
@@ -330,22 +365,18 @@ function Sidebar({ user }) {
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
            <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
-           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Main Menu</p>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.href} href={item.href}>
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${isActive ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>
-                <span className={`transition-colors ${isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`}>{item.icon}</span>
-                {item.label}
-              </div>
-            </Link>
-          );
-        })}
+        {navItems.map((item) => (
+          <Link key={item.href} href={item.href}>
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer text-slate-500 hover:bg-slate-50 hover:text-slate-900`}>
+              <span className={`transition-colors text-slate-400 group-hover:text-slate-600`}>{item.icon}</span>
+              {item.label}
+            </div>
+          </Link>
+        ))}
       </nav>
       <div className="p-4 border-t border-slate-50">
         <div className="bg-slate-50 rounded-xl p-4 mb-3 flex items-center gap-3">
@@ -355,7 +386,7 @@ function Sidebar({ user }) {
             <p className="text-xs text-slate-500 truncate">Administrator</p>
           </div>
         </div>
-        <button onClick={() => { localStorage.removeItem("access"); router.push("/login"); }} className="flex items-center justify-center gap-2 w-full text-red-600 bg-white border border-red-100 hover:bg-red-50 font-medium px-4 py-2.5 rounded-xl transition-colors text-sm">
+        <button onClick={() => { localStorage.removeItem("access"); router.push("/login"); }} className="flex items-center justify-center gap-2 w-full text-red-600 bg-white border border-red-100 hover:bg-red-50 font-medium px-4 py-2.5 rounded-xl transition-colors text-sm"> 
           <LogOut className="w-4 h-4" /> Sign Out
         </button>
       </div>
