@@ -43,7 +43,7 @@ export default function LandingPage() {
 
   const toggleFAQ = (index) => setOpenFAQ(openFAQ === index ? null : index);
 
-  // --- DATA FROM YOUR ORIGINAL FILE ---
+  // --- DATA ---
   const pitchDeckData = {
     labels: ["Failed", "Incorrect", "Unattractive"],
     datasets: [{ data: [40, 35, 25], backgroundColor: ["#EF4444", "#F59E0B", "#3B82F6"] }],
@@ -66,88 +66,91 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden relative">
       
-      {/* --- NAVBAR --- */}
-      {/* --- NAVBAR --- */}
-   <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-3" : "bg-transparent py-5"}`}>
-  <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-    
-    {/* Logo */}
-    <div className="flex items-center gap-2 cursor-pointer" onClick={() => scroller.scrollTo("home", { smooth: true })}>
-        {/* Kept your requested 100px height with negative margins */}
-        <img src="/logowb.png" alt="Startify Logo" className="h-[110px] w-auto -my-[30px]" />
-        {/* <span className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">Startify</span> */}
-    </div>
-
-    {/* Desktop Menu - UPDATED */}
-    {/* Changed gap-8 to gap-12 for more breathing room */}
-    <div className="hidden md:flex items-center gap-12">
-      {navLinks.map((link) => (
-        <ScrollLink
-          key={link.to}
-          to={link.to}
-          smooth={true}
-          duration={800}
-          offset={-80}
-          // UPDATED CLASSES:
-          // text-sm -> text-base (Larger size, approx 16px)
-          // text-slate-600 -> text-slate-800 (Darker, higher contrast)
-          className="text-sm font-bold text-slate-800 hover:text-[#FF6B1A] cursor-pointer transition-colors"
-        >
-          {link.label}
-        </ScrollLink>
-      ))}
-    </div>
-
-    {/* Auth Buttons - UPDATED */}
-    <div className="hidden md:flex items-center gap-4">
-      {/* <Link href="/login" className="text-base font-medium text-slate-800 hover:text-slate-900">Log In</Link> */}
-      <Link href="/register" className="bg-[#FF6B1A] hover:bg-[#e05a15] text-white px-6 py-3 rounded-full text-base font-semibold transition shadow-lg shadow-orange-200">
-        Get Started
-      </Link>
-    </div>
-
-    {/* Mobile Toggle */}
-    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-700">
-      {isMenuOpen ? <X /> : <Menu />}
-    </button>
-  </div>
-
-  {/* Mobile Menu */}
-  <AnimatePresence>
-    {isMenuOpen && (
-      <motion.div 
-        initial={{ height: 0, opacity: 0 }} 
-        animate={{ height: "auto", opacity: 1 }} 
-        exit={{ height: 0, opacity: 0 }}
-        className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+   {/* Background Texture Overlay */}
+      <div 
+        // 1. Removed 'mix-blend-overlay'
+        // 2. Set opacity to a very low specific number (5%)
+        // 3. Added 'grayscale' to ensure no weird colors appear
+        className="absolute inset-0 z-0 opacity-[0.2] grayscale pointer-events-none bg-repeat" 
+        
+        // MAKE SURE THIS FILENAME IS CORRECT
+        style={{ backgroundImage: `url('/bg3.jpg')` }} 
       >
-        <div className="flex flex-col p-6 gap-4">
-          {navLinks.map((link) => (
-            <ScrollLink
-              key={link.to}
-              to={link.to}
-              smooth={true}
-              offset={-70}
-              onClick={() => setIsMenuOpen(false)}
-              className="text-slate-700 font-medium py-2 border-b border-gray-50"
-            >
-              {link.label}
-            </ScrollLink>
-          ))}
-          <Link href="/register" className="bg-[#FF6B1A] text-white text-center py-3 rounded-xl font-semibold mt-2">
-            Join Now
-          </Link>
+      </div>
+      {/* --- NAVBAR --- */}
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-3" : "bg-transparent py-5"}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => scroller.scrollTo("home", { smooth: true })}>
+             <img src="/logowb.png" alt="Startify Logo" className="h-[110px] w-auto -my-[30px]" />
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-12">
+            {navLinks.map((link) => (
+              <ScrollLink
+                key={link.to}
+                to={link.to}
+                smooth={true}
+                duration={800}
+                offset={-80}
+                className="text-sm font-bold text-slate-800 hover:text-[#FF6B1A] cursor-pointer transition-colors"
+              >
+                {link.label}
+              </ScrollLink>
+            ))}
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link href="/register" className="bg-[#FF6B1A] hover:bg-[#e05a15] text-white px-6 py-3 rounded-full text-base font-semibold transition shadow-lg shadow-orange-200">
+              Get Started
+            </Link>
+          </div>
+
+          {/* Mobile Toggle */}
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-700">
+            {isMenuOpen ? <X /> : <Menu />}
+          </button>
         </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</nav>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }} 
+              animate={{ height: "auto", opacity: 1 }} 
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+            >
+              <div className="flex flex-col p-6 gap-4">
+                {navLinks.map((link) => (
+                  <ScrollLink
+                    key={link.to}
+                    to={link.to}
+                    smooth={true}
+                    offset={-70}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-slate-700 font-medium py-2 border-b border-gray-50"
+                  >
+                    {link.label}
+                  </ScrollLink>
+                ))}
+                <Link href="/register" className="bg-[#FF6B1A] text-white text-center py-3 rounded-xl font-semibold mt-2">
+                  Join Now
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
       {/* --- HERO SECTION --- */}
-      <section id="home" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <section id="home" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 bg-transparent">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center relative z-10">
           
           {/* Left Content */}
           <motion.div 
@@ -204,7 +207,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- ABOUT SECTION --- */}
-      <section id="about" className="py-24 bg-white">
+      <section id="about" className="py-24 bg-white relative z-10">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
           <motion.div 
             initial={{ opacity: 0, x: -30 }} 
@@ -244,7 +247,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- FEATURES GRID --- */}
-      <section id="features" className="py-24 bg-slate-50">
+      <section id="features" className="py-24 bg-slate-50 relative z-10">
         <div className="max-w-7xl mx-auto px-6 text-center mb-16">
           <h2 className="text-3xl font-bold text-slate-900">Everything you need to scale</h2>
           <p className="text-slate-500 mt-4 max-w-2xl mx-auto">Powerful tools integrated into one seamless workflow to help you succeed.</p>
@@ -276,7 +279,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- DATA VISUALIZATION SECTION --- */}
-      <section className="py-24 bg-white overflow-hidden">
+      <section className="py-24 bg-white overflow-hidden relative z-10">
         <div className="max-w-7xl mx-auto px-6 space-y-24">
           
           {/* Pitch Deck Feature */}
@@ -356,7 +359,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- REVIEWS --- */}
-      <section id="reviews" className="py-24 bg-slate-50">
+      <section id="reviews" className="py-24 bg-slate-50 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">Trusted by Founders</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -389,7 +392,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- FAQ --- */}
-      <section id="faq" className="py-24 bg-white">
+      <section id="faq" className="py-24 bg-white relative z-10">
         <div className="max-w-3xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Frequently Asked Questions</h2>
           <div className="space-y-4">
@@ -425,7 +428,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-slate-900 text-white py-20 border-t border-slate-800">
+      <footer className="bg-slate-900 text-white py-20 border-t border-slate-800 relative z-10">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Scale Your Startup?</h2>
           <p className="text-slate-400 mb-8 max-w-xl mx-auto">Join thousands of founders who are building the future with Startify.</p>

@@ -6,7 +6,8 @@ import {
   FileText, Files, Home, Upload, Search, Trash2, 
   Download, Image as ImageIcon, File, MoreVertical, 
   Loader2, X, ChevronRight, Users, ClipboardCheck, 
-  DollarSign, PieChart, Building2, LogOut, FileCode
+  DollarSign, PieChart, Building2, LogOut, FileCode,
+  Database // Added Database icon for Storage
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,12 +15,30 @@ import { getUser } from "@/lib/api";
 
 // --- Helper: File Icon based on extension ---
 const getFileIcon = (filename) => {
-  const ext = filename.split('.').pop().toLowerCase();
+  const ext = filename?.split('.').pop().toLowerCase();
   if (['pdf'].includes(ext)) return <FileText className="w-5 h-5 text-red-500" />;
   if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return <ImageIcon className="w-5 h-5 text-purple-500" />;
   if (['doc', 'docx'].includes(ext)) return <FileText className="w-5 h-5 text-blue-500" />;
   if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileText className="w-5 h-5 text-green-500" />;
   return <File className="w-5 h-5 text-slate-400" />;
+};
+
+// --- Helper: Parse String Size to Bytes ---
+const parseSizeToBytes = (size) => {
+  if (!size) return 0;
+  if (typeof size === 'number') return size;
+  
+  const str = String(size).trim().toUpperCase();
+  const match = str.match(/([\d.]+)\s*(KB|MB|GB|B)?/);
+  if (!match) return Number(str) || 0;
+  
+  const val = parseFloat(match[1]);
+  const unit = match[2];
+  
+  if (unit === 'KB') return val * 1024;
+  if (unit === 'MB') return val * 1024 * 1024;
+  if (unit === 'GB') return val * 1024 * 1024 * 1024;
+  return val;
 };
 
 // --- Helper: Format Bytes ---
@@ -90,11 +109,28 @@ export default function DocumentHub() {
     }
   };
 
-  // Derived State
+  // Derived State (Search)
   const filteredDocs = documents.filter(doc => 
     doc.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.file?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // --- STATISTICS CALCULATIONS ---
+  const totalFiles = documents.length;
+
+  // Recent Uploads (Last 7 Days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const recentUploadsCount = documents.filter(doc => {
+    const docDate = new Date(doc.created_at || doc.date || Date.now());
+    return docDate >= sevenDaysAgo;
+  }).length;
+
+  // Storage Used
+  const totalBytes = documents.reduce((acc, doc) => {
+    return acc + parseSizeToBytes(doc.file_size || doc.size);
+  }, 0);
+  const storageUsed = formatBytes(totalBytes);
 
   if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
 
@@ -124,11 +160,26 @@ export default function DocumentHub() {
           </button>
         </header>
 
-        {/* Stats Row */}
+        {/* --- DYNAMIC STATS ROW --- */}
         <div className="grid sm:grid-cols-3 gap-6 mb-8">
-          <StatCard title="Total Files" value={documents.length} icon={<Files className="text-blue-600" />} color="blue" />
-          <StatCard title="Recent Uploads" value={documents.length > 0 ? "Active" : "None"} icon={<FileCode className="text-purple-600" />} color="purple" />
-          <StatCard title="Storage Used" value="Unknown" icon={<DollarSign className="text-green-600" />} color="green" />
+          <StatCard 
+            title="Total Files" 
+            value={totalFiles} 
+            icon={<Files className="text-blue-600" />} 
+            color="blue" 
+          />
+          <StatCard 
+            title="Recent Uploads" 
+            value={`${recentUploadsCount} this week`} 
+            icon={<FileCode className="text-purple-600" />} 
+            color="purple" 
+          />
+          <StatCard 
+            title="Storage Used" 
+            value={storageUsed} 
+            icon={<Database className="text-green-600" />} 
+            color="green" 
+          />
         </div>
 
         {/* Filter Bar */}
@@ -152,6 +203,7 @@ export default function DocumentHub() {
               <tr>
                 <th className="px-6 py-4">Name</th>
                 <th className="px-6 py-4">Type</th>
+                <th className="px-6 py-4">Size</th>
                 <th className="px-6 py-4">Date Added</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -159,7 +211,7 @@ export default function DocumentHub() {
             <tbody className="divide-y divide-slate-50">
               {filteredDocs.length === 0 ? (
                 <tr>
-                  <td colSpan="4">
+                  <td colSpan="5">
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                       <Files className="w-12 h-12 mb-3 opacity-20" />
                       <p>No documents found.</p>
@@ -183,8 +235,11 @@ export default function DocumentHub() {
                     <td className="px-6 py-4 text-sm text-slate-500 uppercase font-bold text-[10px] tracking-wide">
                       {doc.file?.split('.').pop()}
                     </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                      {doc.file_size || doc.size ? formatBytes(parseSizeToBytes(doc.file_size || doc.size)) : "Unknown"}
+                    </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(doc.created_at || Date.now()).toLocaleDateString()}
+                      {new Date(doc.created_at || doc.date || Date.now()).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -230,13 +285,20 @@ export default function DocumentHub() {
 // --- Sub-Components ---
 
 function StatCard({ title, value, icon, color }) {
+  // Dynamically mapped background colors for safe tailwind rendering
+  const bgColors = {
+    blue: "bg-blue-50",
+    purple: "bg-purple-50",
+    green: "bg-green-50",
+  };
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
       <div>
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
         <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
       </div>
-      <div className={`p-3 bg-${color}-50 rounded-xl`}>{icon}</div>
+      <div className={`p-3 ${bgColors[color] || 'bg-slate-50'} rounded-xl`}>{icon}</div>
     </div>
   );
 }
@@ -342,7 +404,6 @@ function Sidebar({ user }) {
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
            <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
-           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">

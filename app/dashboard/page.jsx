@@ -1,14 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Home, CheckSquare, FileText, Building2, LayoutDashboard, 
   LogOut, Bell, Flame, Calendar, ArrowRight, Loader2, 
-  TrendingUp, CheckCircle, Clock, RefreshCw, AlertCircle
+  TrendingUp, CheckCircle, Clock, RefreshCw, AlertCircle, X
 } from "lucide-react";
 import Link from "next/link";
-import { getUser } from "@/lib/api";
+import { getUser, getProjectsWithTasks } from "@/lib/api";
+
+// --- Helper: Check Assignment ---
+const checkIsAssigned = (task, user) => {
+  if (!user || !task) return false;
+  const userIdStr = String(user.id);
+
+  // 1. Check assigned_to_ids (Standard Array of IDs)
+  if (Array.isArray(task.assigned_to_ids) && task.assigned_to_ids.map(String).includes(userIdStr)) {
+    return true;
+  } 
+  // 2. Check assigned_to (Could be ID, Object, or Array)
+  if (task.assigned_to) {
+    if (Array.isArray(task.assigned_to)) {
+       return task.assigned_to.some(val => String(val) === userIdStr || String(val?.id) === userIdStr);
+    } else {
+       return String(task.assigned_to) === userIdStr || String(task.assigned_to?.id) === userIdStr;
+    }
+  }
+  return false;
+};
 
 // --- Sidebar ---
 function UserSidebar({ user }) {
@@ -27,8 +47,8 @@ function UserSidebar({ user }) {
     <aside className="fixed top-0 left-0 h-screen w-72 bg-white border-r border-slate-100 z-50 hidden lg:flex flex-col">
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
-           <img src="/logowb.png" alt="Logo" className="h-8 w-auto" />
-           <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span>
+           <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
+           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <div className="p-6">
@@ -39,7 +59,7 @@ function UserSidebar({ user }) {
         <nav className="space-y-1">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${window.location.pathname === item.href ? "bg-slate-900 text-white shadow-lg" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${typeof window !== 'undefined' && window.location.pathname === item.href ? "bg-slate-900 text-white shadow-lg" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>
                 {item.icon}{item.label}
               </div>
             </Link>
@@ -66,37 +86,58 @@ export default function UserDashboard() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // New State for Notifications
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const router = useRouter();
 
-  // 1. Fetch Data Function (FIXED 401 HANDLING)
+  // 1. Fetch Data Function
   const loadData = async () => {
     const token = localStorage.getItem("access");
     if (!token) { router.push("/login"); return; }
     
     setRefreshing(true);
     try {
+        // Fetch User
         const userRes = await getUser(token);
-        setUser(userRes.data);
-        if (userRes.data.role === 'admin') { router.push('/admin/dashboard'); return; }
+        const currentUser = userRes.data;
+        setUser(currentUser);
+        
+        if (currentUser.role === 'admin') { 
+            router.push('/admin/dashboard'); 
+            return; 
+        }
 
-        // Fetch Tasks
-        try {
-            const tasksRes = await fetch("https://backend-ug9v.onrender.com/api/tasks/my_tasks/", { headers: { Authorization: `Bearer ${token}` } });
-            if (tasksRes.ok) setTasks(await tasksRes.json());
-            else {
-                const all = await fetch("https://backend-ug9v.onrender.com/api/tasks/", { headers: { Authorization: `Bearer ${token}` } });
-                if(all.ok) {
-                    const data = await all.json();
-                    setTasks(data.filter(t => Array.isArray(t.assigned_to_ids) ? t.assigned_to_ids.includes(userRes.data.id) : t.assigned_to === userRes.data.id));
+        // Fetch Projects (contains all tasks)
+        const projectsData = await getProjectsWithTasks();
+        
+        // FLATTEN & FILTER: Extract only tasks assigned to THIS user
+        let myAllTasks = [];
+        if (projectsData && Array.isArray(projectsData)) {
+            projectsData.forEach(project => {
+                if (project.tasks && Array.isArray(project.tasks)) {
+                    const assignedTasks = project.tasks.filter(task => checkIsAssigned(task, currentUser));
+                    
+                    // Add project info to task for display
+                    const tasksWithMeta = assignedTasks.map(t => ({
+                        ...t, 
+                        projectName: project.name,
+                        projectDeadline: project.deadline
+                    }));
+                    
+                    myAllTasks = [...myAllTasks, ...tasksWithMeta];
                 }
-            }
-        } catch (e) { console.warn(e); }
+            });
+        }
+        
+        setTasks(myAllTasks);
+
     } catch (err) { 
         console.error("Dashboard Load Error:", err);
-        // --- THIS FIXES THE CRASH ---
         if (err.response && err.response.status === 401) {
-            localStorage.removeItem("access"); // Clear bad token
-            router.push("/login"); // Force login
+            localStorage.removeItem("access"); 
+            router.push("/login"); 
         }
     } 
     finally { 
@@ -112,7 +153,7 @@ export default function UserDashboard() {
   // 2. Handle Quick Complete from Dashboard
   const handleQuickComplete = async (taskId) => {
     const previousTasks = [...tasks];
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "Completed" } : t));
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: "Completed" } : t));
 
     try {
         const token = localStorage.getItem("access");
@@ -123,7 +164,7 @@ export default function UserDashboard() {
         });
         if (!res.ok) throw new Error("Failed");
     } catch (err) {
-        setTasks(previousTasks);
+        setTasks(previousTasks); 
         alert("Failed to update task.");
     }
   };
@@ -142,8 +183,35 @@ export default function UserDashboard() {
   const efficiencyBarColor = efficiency >= 80 ? "bg-green-500" : efficiency >= 50 ? "bg-blue-500" : "bg-orange-500";
 
   // Focus Task Logic
-  const highPriority = pendingTasks.filter(t => t.priority === 'High');
-  const focusTask = highPriority.length > 0 ? highPriority[0] : pendingTasks[0];
+  const sortedPending = [...pendingTasks].sort((a, b) => {
+     if(a.priority === 'High' && b.priority !== 'High') return -1;
+     return 0; 
+  });
+  const focusTask = sortedPending.length > 0 ? sortedPending[0] : null;
+
+  // --- NOTIFICATIONS LOGIC ---
+  const notifications = useMemo(() => {
+    const list = [];
+    const today = new Date();
+
+    pendingTasks.forEach(t => {
+        // Check 1: High Priority
+        if (t.priority === 'High') {
+            list.push({ id: t.id, title: "High Priority Task", msg: `"${t.description}" needs attention.`, type: 'alert' });
+        }
+        // Check 2: Approaching Deadline (within 3 days)
+        if (t.projectDeadline) {
+            const due = new Date(t.projectDeadline);
+            const diffTime = due - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays <= 3) {
+                list.push({ id: t.id, title: "Deadline Approaching", msg: `"${t.description}" is due in ${diffDays} day(s).`, type: 'time' });
+            }
+        }
+    });
+    // Remove duplicates if any (simple logic) & Limit to 5
+    return list.slice(0, 5);
+  }, [pendingTasks]);
 
   if (loading || !user) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
 
@@ -153,23 +221,65 @@ export default function UserDashboard() {
       
       <main className="flex-1 lg:ml-72 p-8 md:p-12 transition-all">
         {/* Header */}
-        <header className="mb-12 flex justify-between items-center">
+        <header className="mb-12 flex justify-between items-center relative">
             <div>
                 <h1 className="text-3xl font-bold text-slate-900">{getGreeting()}, {user.username} ☀️</h1>
                 <p className="text-slate-500 mt-1">Here is your daily performance summary.</p>
             </div>
+            
             <div className="flex items-center gap-4">
+                {/* Refresh Button */}
                 <button 
                     onClick={loadData}
                     disabled={refreshing}
-                    className="p-2.5 rounded-full bg-white border border-slate-100 shadow-sm text-slate-400 hover:text-blue-600 transition disabled:animate-spin"
+                    className="p-2.5 rounded-full bg-white border border-slate-100 shadow-sm text-slate-400 hover:text-blue-600 transition"
                     title="Refresh Data"
                 >
-                    <RefreshCw className="w-5 h-5" />
+                    <RefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin text-blue-600" : ""}`} />
                 </button>
-                <div className="bg-white p-2.5 rounded-full border border-slate-100 shadow-sm relative">
-                    <Bell className="w-5 h-5 text-slate-400" />
-                    {pendingCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>}
+
+                {/* Notifications Bell */}
+                <div className="relative">
+                    <button 
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        className={`p-2.5 rounded-full border shadow-sm transition relative ${showNotifications ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-slate-100 text-slate-400 hover:text-slate-600"}`}
+                    >
+                        <Bell className="w-5 h-5" />
+                        {notifications.length > 0 && (
+                            <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                        )}
+                    </button>
+
+                    {/* Notification Dropdown */}
+                    {showNotifications && (
+                        <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                                <h4 className="font-bold text-slate-900 text-sm">Notifications</h4>
+                                <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                            </div>
+                            <div className="max-h-[300px] overflow-y-auto">
+                                {notifications.length > 0 ? (
+                                    notifications.map((note, i) => (
+                                        <div key={i} className="p-4 border-b border-slate-50 hover:bg-slate-50 transition flex gap-3">
+                                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${note.type === 'alert' ? 'bg-red-500' : 'bg-orange-500'}`}></div>
+                                            <div>
+                                                <p className={`text-xs font-bold uppercase mb-0.5 ${note.type === 'alert' ? 'text-red-500' : 'text-orange-500'}`}>{note.title}</p>
+                                                <p className="text-sm text-slate-600 leading-snug">{note.msg}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center text-slate-400">
+                                        <CheckCircle className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                                        <p className="text-xs">No new notifications</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-3 bg-slate-50 text-center border-t border-slate-100">
+                                <Link href="/view_task" className="text-xs font-bold text-blue-600 hover:text-blue-700">View All Tasks</Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>
@@ -191,14 +301,16 @@ export default function UserDashboard() {
                             <div className="relative z-10">
                                 <div className="flex justify-between items-start mb-6">
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold border ${focusTask.priority === 'High' ? 'bg-red-500/20 border-red-500/30 text-red-200' : 'bg-blue-500/20 border-blue-500/30 text-blue-200'}`}>
-                                        {focusTask.priority || 'Normal'} Priority
+                                        {focusTask.projectName || 'Active Project'}
                                     </span>
                                     <span className="text-slate-400 text-xs font-bold tracking-wider uppercase flex items-center gap-2">
-                                        <Clock className="w-3 h-3" /> Due {focusTask.deadline ? new Date(focusTask.deadline).toLocaleDateString() : 'Soon'}
+                                        <Clock className="w-3 h-3" /> Due {focusTask.projectDeadline || 'Soon'}
                                     </span>
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 leading-snug">{focusTask.title}</h3>
-                                <p className="text-slate-400 text-sm mb-8 line-clamp-2 max-w-lg">{focusTask.description}</p>
+                                <h3 className="text-2xl font-bold mb-3 leading-snug">{focusTask.description}</h3>
+                                <p className="text-slate-400 text-sm mb-8 line-clamp-2 max-w-lg">
+                                    {focusTask.requires_document ? "Requires document upload." : "Standard task."}
+                                </p>
                                 <div className="flex gap-4">
                                     {/* Action 1: Mark Complete directly */}
                                     <button 
@@ -209,8 +321,8 @@ export default function UserDashboard() {
                                     </button>
                                     
                                     {/* Action 2: View Details */}
-                                    <Link href="/dashboard/tasks" className="text-slate-300 px-4 py-3 rounded-xl font-bold text-sm border border-slate-700 hover:bg-slate-800 transition">
-                                        View Details
+                                    <Link href="/view_task" className="text-slate-300 px-4 py-3 rounded-xl font-bold text-sm border border-slate-700 hover:bg-slate-800 transition">
+                                        View All Tasks
                                     </Link>
                                 </div>
                             </div>
@@ -270,16 +382,16 @@ export default function UserDashboard() {
                 <section>
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="font-bold text-slate-900 text-lg">Upcoming</h2>
-                        <Link href="/dashboard/tasks" className="text-xs font-bold text-blue-600 hover:underline">View All</Link>
+                        <Link href="/view_task" className="text-xs font-bold text-blue-600 hover:underline">View All</Link>
                     </div>
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 space-y-1">
                         {pendingTasks.slice(0, 4).map((task) => (
                             <div key={task.id} className="p-4 rounded-xl hover:bg-slate-50 transition flex items-start gap-3 group">
-                                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${task.priority === 'High' ? 'bg-red-500' : 'bg-blue-500'}`}></div>
+                                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 bg-blue-500`}></div>
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-bold text-slate-900 line-clamp-1">{task.title}</h4>
+                                    <h4 className="text-sm font-bold text-slate-900 line-clamp-1">{task.description}</h4>
                                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" /> {task.deadline ? new Date(task.deadline).toLocaleDateString() : "No Date"}
+                                        <Calendar className="w-3 h-3" /> {task.projectDeadline || "No Date"}
                                     </p>
                                 </div>
                             </div>

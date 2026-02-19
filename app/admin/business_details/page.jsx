@@ -5,7 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { 
   Building2, Globe, Mail, Phone, MapPin, Calendar, 
   FileText, Save, Loader2, Home, Users, ClipboardCheck, 
-  DollarSign, PieChart, Files, LogOut, ChevronRight, LayoutDashboard
+  DollarSign, PieChart, Files, LogOut, ChevronRight, 
+  LayoutDashboard, Copy, Check
 } from "lucide-react";
 import Link from "next/link";
 import { getUser } from "@/lib/api";
@@ -15,6 +16,7 @@ export default function BusinessProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+  const [copied, setCopied] = useState(false); // For copy button feedback
   
   const [formData, setFormData] = useState({
     name: "",
@@ -55,7 +57,7 @@ export default function BusinessProfilePage() {
           const data = await res.json();
           // Populate form with existing data (handle nulls)
           if (Array.isArray(data) && data.length > 0) {
-             const profile = data[0]; // Assuming list response
+             const profile = data[0]; 
              setFormData({
                name: profile.name || "",
                industry: profile.industry || "",
@@ -93,6 +95,14 @@ export default function BusinessProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleCopyCode = () => {
+    if (user?.company_code) {
+      navigator.clipboard.writeText(user.company_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset icon after 2s
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -105,7 +115,7 @@ export default function BusinessProfilePage() {
     try {
       const token = localStorage.getItem("access");
       const res = await fetch("https://backend-ug9v.onrender.com/api/company-profile/", {
-        method: "POST", // Using POST to create or update (handled by backend logic)
+        method: "POST", // Using POST to create or update
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
@@ -223,13 +233,13 @@ export default function BusinessProfilePage() {
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
-  type="text" // <--- Change to text so it accepts "www.example.com"
-  name="website"
-  value={formData.website}
-  onChange={handleChange}
-  placeholder="example.com"
-  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
-/>
+                      type="text" 
+                      name="website"
+                      value={formData.website}
+                      onChange={handleChange}
+                      placeholder="example.com"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+                    />
                   </div>
                 </div>
                 <div>
@@ -280,6 +290,34 @@ export default function BusinessProfilePage() {
 
           {/* RIGHT COLUMN: Sidebar/Actions */}
           <div className="xl:col-span-1 space-y-6">
+            
+            {/* NEW: Company Code Card */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-2">Invite Employees</h3>
+              <p className="text-sm text-slate-500 mb-4">
+                Share this unique code with your team so they can join your workspace during registration.
+              </p>
+              
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Company Code</label>
+                <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-slate-200 shadow-sm">
+                  <code className="text-base font-mono font-bold text-blue-700 tracking-wider">
+                    {user?.company_code || "N/A"}
+                  </code>
+                  <button 
+                    type="button" 
+                    onClick={handleCopyCode} 
+                    className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                    title="Copy to clipboard"
+                  >
+                    {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                  </button>
+                </div>
+                {copied && <p className="text-xs text-green-600 font-medium mt-2 animate-in fade-in">Copied to clipboard!</p>}
+              </div>
+            </div>
+
+            {/* Publish Card */}
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm sticky top-10">
               <h3 className="font-bold text-slate-900 mb-4">Publish Changes</h3>
               <p className="text-sm text-slate-500 mb-6">
@@ -310,6 +348,7 @@ export default function BusinessProfilePage() {
                 </button>
               </div>
             </div>
+
           </div>
 
         </form>

@@ -99,3 +99,19 @@ html {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* Make all text and images non-selectable (non-maskable) */
+body {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+  -webkit-user-drag: none; /* Prevents dragging images */
+}
+
+/* IMPORTANT: Re-enable selection for inputs so users can still type in forms */
+input, textarea, select {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}

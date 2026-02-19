@@ -1,25 +1,87 @@
 "use client";
 
-// Reuse the exact same code logic as Admin, but distinct page title
 import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { 
-  FileText, Search, Upload, Trash2, Download, X, File, Image as ImageIcon, Loader2 
+  FileText, Search, Upload, Trash2, Download, X, File, Image as ImageIcon, Loader2,
+  Home, CheckSquare, Building2, LogOut, LayoutDashboard 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getDocuments, uploadDocument, deleteDocument } from "@/lib/api";
+import { getDocuments, uploadDocument, deleteDocument, getUser } from "@/lib/api";
 
-export default function UserDocumentHub() {
-  // You can just copy the 'DocumentHubInterface' component code from the Admin file 
-  // and paste it here, OR make it a shared component in /components if you prefer.
-  // For simplicity, I will paste the minimal wrapper here assuming you copy the helper function below.
-  
-  return <DocumentHubInterface title="Team Documents" role="user" />;
+// --- Sidebar Component ---
+function UserSidebar({ user }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const handleLogout = () => { localStorage.removeItem("access"); router.push("/login"); };
+
+  const navItems = [
+    { href: "/dashboard", label: "My Dashboard", icon: <Home className="w-5 h-5" /> },
+    { href: "/view_task", label: "My Tasks", icon: <CheckSquare className="w-5 h-5" /> }, 
+    { href: "/dashboard/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
+    { href: "/dashboard/business_details", label: "Company Info", icon: <Building2 className="w-5 h-5" /> },
+  ];
+
+  return (
+    <aside className="fixed top-0 left-0 h-screen w-72 bg-white border-r border-slate-100 z-50 hidden lg:flex flex-col">
+      <div className="h-20 flex items-center px-8 border-b border-slate-50">
+        <div className="flex items-center gap-3">
+           <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
+           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
+        </div>
+      </div>
+      <div className="p-6">
+        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">{user?.username?.[0]?.toUpperCase() || "U"}</div>
+          <div className="overflow-hidden"><p className="text-sm font-bold text-slate-900 truncate">{user?.username}</p><p className="text-xs text-blue-600 font-medium">Employee</p></div>
+        </div>
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href}>
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${pathname === item.href ? "bg-slate-900 text-white shadow-lg" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>
+                {item.icon}{item.label}
+              </div>
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <div className="mt-auto p-6 border-t border-slate-50">
+        <button onClick={handleLogout} className="flex items-center justify-center gap-2 w-full text-slate-600 bg-slate-50 hover:bg-red-50 hover:text-red-600 font-medium px-4 py-3 rounded-xl transition-colors text-sm"><LogOut className="w-4 h-4" /> Sign Out</button>
+      </div>
+    </aside>
+  );
 }
 
-// *** PASTE THE SAME 'DocumentHubInterface' FUNCTION HERE AS ABOVE ***
-// (The one starting with function DocumentHubInterface({ title, role }) { ... })
-// Ensure you include all imports at the top.
+// --- Main Page Component ---
+export default function UserDocumentHub() {
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const router = useRouter();
 
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    if (!token) { router.push("/login"); return; }
+    
+    getUser(token).then(res => {
+      setUser(res.data);
+      setLoadingUser(false);
+    }).catch(() => router.push("/login"));
+  }, [router]);
+
+  if (loadingUser) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
+      <UserSidebar user={user} />
+      <main className="flex-1 lg:ml-72 p-8 md:p-12 transition-all">
+        <DocumentHubInterface title="Team Documents" />
+      </main>
+    </div>
+  );
+}
+
+// --- Inner Interface Component ---
 function DocumentHubInterface({ title }) {
   const [documents, setDocuments] = useState([]);
   const [filteredDocs, setFilteredDocs] = useState([]);
@@ -27,14 +89,11 @@ function DocumentHubInterface({ title }) {
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Upload Form State
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadDesc, setUploadDesc] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
     if (!searchQuery) {
@@ -66,7 +125,7 @@ function DocumentHubInterface({ title }) {
 
     try {
       await uploadDocument(uploadFile, uploadTitle, uploadDesc);
-      await fetchData(); // Refresh list
+      await fetchData(); 
       setIsUploading(false);
       setUploadFile(null);
       setUploadTitle("");
@@ -93,9 +152,9 @@ function DocumentHubInterface({ title }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 md:p-12 font-sans text-gray-900">
+    <div>
       {/* Header */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
           <p className="text-gray-500 mt-1">Access and share team files.</p>
@@ -104,7 +163,7 @@ function DocumentHubInterface({ title }) {
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -112,7 +171,7 @@ function DocumentHubInterface({ title }) {
           </div>
           <button 
             onClick={() => setIsUploading(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition shadow-lg"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg text-sm font-bold"
           >
             <Upload className="w-4 h-4" /> Upload
           </button>
@@ -120,7 +179,7 @@ function DocumentHubInterface({ title }) {
       </div>
 
       {/* Grid */}
-      <div className="max-w-7xl mx-auto">
+      <div>
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin w-8 h-8 text-blue-500" /></div>
         ) : filteredDocs.length === 0 ? (
@@ -143,14 +202,14 @@ function DocumentHubInterface({ title }) {
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
-                  <h3 className="font-semibold truncate" title={doc.title}>{doc.title}</h3>
+                  <h3 className="font-semibold truncate text-sm" title={doc.title}>{doc.title}</h3>
                   <p className="text-xs text-gray-500 mt-2 flex justify-between">
                     <span>{doc.date}</span><span>{doc.file_size}</span>
                   </p>
                   <p className="text-xs text-gray-400 mt-1">By {doc.uploaded_by_username}</p>
                   
                   <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition flex justify-center bg-white/90 backdrop-blur rounded-b-2xl">
-                    <a href={doc.file} target="_blank" className="text-blue-600 font-medium flex items-center gap-2">
+                    <a href={doc.file} target="_blank" className="text-blue-600 font-medium flex items-center gap-2 text-sm">
                       <Download className="w-4 h-4" /> Download
                     </a>
                   </div>
@@ -195,7 +254,7 @@ function DocumentHubInterface({ title }) {
                   <input required type="file" onChange={e => setUploadFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   <p className="text-sm text-gray-600">{uploadFile ? uploadFile.name : "Click to select file"}</p>
                 </div>
-                <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">Upload</button>
+                <button type="submit" className="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold hover:bg-blue-700 transition">Upload</button>
               </form>
             </motion.div>
           </>

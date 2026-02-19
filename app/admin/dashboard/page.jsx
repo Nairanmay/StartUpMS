@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { getUser, getUsersByCompany, getMyTasks, getPitchDeckAnalysis } from "@/lib/api";
+import { getUser, getUsersByCompany, getProjectsWithTasks, getPitchDeckAnalysis } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import {
   Loader2, Users, FileText, DollarSign, ClipboardCheck, 
   Home, LogOut, Building2, PieChart, Files, Search, 
-  Bell, ChevronRight, TrendingUp, Activity, X, User
+  Bell, ChevronRight, TrendingUp, Activity, X, User, Copy, Check
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,12 +16,13 @@ export default function AdminDashboard() {
   
   // Data State
   const [employees, setEmployees] = useState([]);
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]); 
   const [pitchScore, setPitchScore] = useState(null);
   
   // Interactive State
   const [searchQuery, setSearchQuery] = useState("");
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [copied, setCopied] = useState(false); 
   const notifRef = useRef(null);
   
   const router = useRouter();
@@ -46,7 +47,6 @@ export default function AdminDashboard() {
 
     async function loadDashboardData() {
       try {
-        // 1. Fetch Current User
         const userRes = await getUser(token);
         if (userRes.data.role !== "admin") {
           router.push("/dashboard");
@@ -54,18 +54,25 @@ export default function AdminDashboard() {
         }
         setUser(userRes.data);
 
-        // 2. Fetch Company Data & Pitch Deck
         if (userRes.data.company_code) {
-          const [usersData, tasksData, pitchData] = await Promise.all([
+          const [usersData, projectsData, pitchData] = await Promise.all([
             getUsersByCompany(userRes.data.company_code).catch(() => []),
-            getMyTasks().catch(() => []),
+            getProjectsWithTasks().catch(() => []), 
             getPitchDeckAnalysis().catch(() => null) 
           ]);
 
           setEmployees(Array.isArray(usersData) ? usersData : []);
-          setTasks(Array.isArray(tasksData) ? tasksData : []);
+          
+          let allTasks = [];
+          if (Array.isArray(projectsData)) {
+            projectsData.forEach(project => {
+              if (Array.isArray(project.tasks)) {
+                allTasks = [...allTasks, ...project.tasks];
+              }
+            });
+          }
+          setTasks(allTasks);
 
-          // Calculate Pitch Score
           if (pitchData && pitchData.ratings) {
             const ratings = Object.values(pitchData.ratings);
             if (ratings.length > 0) {
@@ -85,8 +92,20 @@ export default function AdminDashboard() {
     loadDashboardData();
   }, [router]);
 
-  // Derived Data
-  const pendingTasks = tasks.filter(t => t.status !== 'Completed');
+  const handleCopyCode = () => {
+    if (user?.company_code) {
+      navigator.clipboard.writeText(user.company_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => (t.status || "").toLowerCase() === 'completed');
+  const pendingTasks = tasks.filter(t => (t.status || "").toLowerCase() !== 'completed');
+  
+  const completedTasksCount = completedTasks.length;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
   
   const allActions = [
     { title: "Manage Users", desc: "Add employees & roles", icon: <Users />, href: "/admin/employee", color: "bg-blue-50 text-blue-600" },
@@ -98,7 +117,6 @@ export default function AdminDashboard() {
     { title: "Business Profile", desc: "Edit company details", icon: <Building2 />, href: "/admin/business_details", color: "bg-teal-50 text-teal-600" },
   ];
 
-  // --- SAFE SEARCH LOGIC ---
   const filteredActions = allActions.filter(a => 
     (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
     (a.desc || "").toLowerCase().includes(searchQuery.toLowerCase())
@@ -109,9 +127,8 @@ export default function AdminDashboard() {
     (e.email || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // FIX: Added safe check (t.title || "") to prevent crashes
   const filteredTasks = tasks.filter(t => 
-    (t.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+    (t.title || t.description || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading || !user) {
@@ -119,10 +136,21 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
+    // 1. ADDED 'relative' TO THIS WRAPPER
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900 relative">
+      
+      {/* 2. ADDED BACKGROUND IMAGE DIV */}
+      {/* Change 'YOUR_BG_IMAGE.png' to the file name in your public folder */}
+      {/* Adjust opacity-[0.05] (5%) to make it lighter or darker */}
+      <div 
+        className="absolute inset-0 z-0 opacity-[0.2] grayscale pointer-events-none bg-repeat" 
+        style={{ backgroundImage: `url('/bg3.jpg')` }} 
+      ></div>
+
       <Sidebar user={user} />
       
-      <main className="flex-1 ml-72 relative">
+      {/* ADDED 'relative z-10' to ensure content stays above the background */}
+      <main className="flex-1 ml-72 relative z-10">
         {/* Top Header */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4 text-slate-500 text-sm">
@@ -184,7 +212,7 @@ export default function AdminDashboard() {
                         pendingTasks.map((task) => (
                           <div key={task.id} className="p-4 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer">
                             <div className="flex justify-between items-start mb-1">
-                              <p className="text-sm font-semibold text-slate-900 line-clamp-1">{task.title}</p>
+                              <p className="text-sm font-semibold text-slate-900 line-clamp-1">{task.title || "Task Alert"}</p>
                               <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">Just now</span>
                             </div>
                             <p className="text-xs text-slate-500 line-clamp-2">{task.description}</p>
@@ -207,7 +235,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="p-8 md:p-10 max-w-7xl mx-auto">
+        <div className="p-8 md:p-10 max-w-7xl mx-auto relative z-10">
           {searchQuery ? (
              /* --- SEARCH RESULTS VIEW --- */
              <div className="space-y-8 animate-in fade-in duration-300">
@@ -257,7 +285,7 @@ export default function AdminDashboard() {
                             <p className="font-bold text-slate-900">{t.title || "Untitled Task"}</p>
                             <p className="text-xs text-slate-500">{t.description}</p>
                          </div>
-                         <span className={`px-2 py-1 rounded-lg text-xs font-bold ${t.status === 'Completed' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                         <span className={`px-2 py-1 rounded-lg text-xs font-bold ${(t.status || "").toLowerCase() === 'completed' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
                            {t.status || 'Pending'}
                          </span>
                        </div>
@@ -280,12 +308,25 @@ export default function AdminDashboard() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-                  <p className="text-slate-500 mt-2">Welcome back, {user.username}. Here is your company overview.</p>
+                <p className="text-slate-500 mt-2">
+  Welcome back, <span className="font-bold text-lg text-slate-800">{user.username}</span>. Here is your company overview.
+</p>
                 </div>
+                
                 {user.company_code && (
-                  <div className="bg-white px-5 py-2 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Company Code</span>
-                    <span className="text-lg font-mono font-bold text-blue-600">{user.company_code}</span>
+                  <div className="bg-white pl-4 pr-2 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 relative">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Invite Code</span>
+                      <span className="text-lg font-mono font-bold text-blue-600 leading-none tracking-widest">{user.company_code}</span>
+                    </div>
+                    <button 
+                      onClick={handleCopyCode} 
+                      className={`p-2 rounded-lg transition-all ${copied ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}
+                      title="Copy to clipboard"
+                    >
+                      {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                    {copied && <span className="absolute -bottom-5 right-2 text-[10px] font-bold text-green-600 animate-in fade-in">Copied!</span>}
                   </div>
                 )}
               </div>
@@ -294,7 +335,6 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Employees" value={employees.length} icon={<Users className="text-blue-600" />} trend="Active Users" color="blue" />
                 <StatCard title="Pending Tasks" value={pendingTasks.length} icon={<ClipboardCheck className="text-orange-500" />} trend="In Progress" color="orange" />
-                {/* Updated Pitch Score Card */}
                 <StatCard 
                   title="Pitch Score" 
                   value={pitchScore !== null ? `${pitchScore}/100` : "No Data"} 
@@ -302,7 +342,14 @@ export default function AdminDashboard() {
                   trend={pitchScore ? "AI Analysis" : "Upload Deck"} 
                   color="purple" 
                 />
-                <StatCard title="Runway" value="--" icon={<DollarSign className="text-green-600" />} trend="Add Financials" color="green" />
+                
+                <StatCard 
+                  title="Completion Rate" 
+                  value={`${completionRate}%`} 
+                  icon={<TrendingUp className="text-green-600" />} 
+                  trend={`${completedTasksCount} / ${totalTasks} Done`} 
+                  color="green" 
+                />
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -348,15 +395,15 @@ export default function AdminDashboard() {
 // --- Sub-Components ---
 function StatCard({ title, value, icon, trend, color }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div className="flex justify-between items-start mb-4 relative z-10">
         <div>
           <p className="text-slate-500 text-sm font-medium">{title}</p>
           <h3 className="text-2xl font-bold text-slate-900 mt-1">{value}</h3>
         </div>
         <div className={`p-3 rounded-xl bg-${color}-50`}>{icon}</div>
       </div>
-      <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-full">
+      <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-full relative z-10">
         <TrendingUp className="w-3 h-3" /> {trend}
       </div>
     </div>
@@ -366,15 +413,15 @@ function StatCard({ title, value, icon, trend, color }) {
 function ActionCard({ title, desc, icon, href, color }) {
   return (
     <Link href={href} className="group">
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex items-center gap-5">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${color} group-hover:scale-110 transition-transform`}>
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex items-center gap-5 relative overflow-hidden">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${color} group-hover:scale-110 transition-transform relative z-10`}>
           {icon}
         </div>
-        <div>
+        <div className="relative z-10">
           <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{title}</h3>
           <p className="text-sm text-slate-500 mt-1">{desc}</p>
         </div>
-        <ChevronRight className="ml-auto w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+        <ChevronRight className="ml-auto w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors relative z-10" />
       </div>
     </Link>
   );
@@ -398,7 +445,6 @@ function Sidebar({ user }) {
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
            <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
-           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
