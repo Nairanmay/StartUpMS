@@ -61,17 +61,44 @@ export default function AdminDashboard() {
             getPitchDeckAnalysis().catch(() => null) 
           ]);
 
-          setEmployees(Array.isArray(usersData) ? usersData : []);
+          const validEmployees = Array.isArray(usersData) ? usersData : [];
+          setEmployees(validEmployees);
           
-          let allTasks = [];
+          // --- FRONTEND SECURITY FILTER: Isolate Company Data ---
+          const myCompanyCode = userRes.data.company_code;
+          const myEmployeeIds = validEmployees.map(u => String(u.id));
+          myEmployeeIds.push(String(userRes.data.id)); // Include Admin's own ID
+
+          let isolatedTasks = [];
           if (Array.isArray(projectsData)) {
             projectsData.forEach(project => {
+              // 1. If project explicitly belongs to another company, skip it
+              if (project.company_code && project.company_code !== myCompanyCode) return;
+
               if (Array.isArray(project.tasks)) {
-                allTasks = [...allTasks, ...project.tasks];
+                const myTasks = project.tasks.filter(task => {
+                  // 2. If task explicitly has a company code, enforce it
+                  if (task.company_code) {
+                    return task.company_code === myCompanyCode;
+                  }
+                  
+                  // 3. Fallback: Check if the task is assigned to OUR employees
+                  let isAssignedToUs = false;
+                  if (Array.isArray(task.assigned_to_ids)) {
+                    isAssignedToUs = task.assigned_to_ids.some(id => myEmployeeIds.includes(String(id)));
+                  } else if (task.assigned_to) {
+                    const assignees = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+                    isAssignedToUs = assignees.some(val => myEmployeeIds.includes(String(val?.id || val)));
+                  }
+                  
+                  return isAssignedToUs;
+                });
+                
+                isolatedTasks = [...isolatedTasks, ...myTasks];
               }
             });
           }
-          setTasks(allTasks);
+          setTasks(isolatedTasks);
 
           if (pitchData && pitchData.ratings) {
             const ratings = Object.values(pitchData.ratings);
@@ -136,22 +163,15 @@ export default function AdminDashboard() {
   }
 
   return (
-    // 1. ADDED 'relative' TO THIS WRAPPER
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900 relative">
-      
-      {/* 2. ADDED BACKGROUND IMAGE DIV */}
-      {/* Change 'YOUR_BG_IMAGE.png' to the file name in your public folder */}
-      {/* Adjust opacity-[0.05] (5%) to make it lighter or darker */}
       <div 
-        className="absolute inset-0 z-0 opacity-[0.2] grayscale pointer-events-none bg-repeat" 
-        style={{ backgroundImage: `url('/bg3.jpg')` }} 
+        className="absolute inset-0 z-0 opacity-[0.05] grayscale pointer-events-none bg-repeat" 
+        style={{ backgroundImage: `url('/YOUR_BG_IMAGE.png')` }} 
       ></div>
 
       <Sidebar user={user} />
       
-      {/* ADDED 'relative z-10' to ensure content stays above the background */}
       <main className="flex-1 ml-72 relative z-10">
-        {/* Top Header */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4 text-slate-500 text-sm">
             <Home className="w-4 h-4" />
@@ -160,7 +180,6 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* SEARCH BAR */}
             <div className="relative z-40">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
@@ -177,7 +196,6 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* NOTIFICATION BELL */}
             <div className="relative" ref={notifRef}>
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
@@ -189,7 +207,6 @@ export default function AdminDashboard() {
                 )}
               </button>
 
-              {/* Dropdown */}
               <AnimatePresence>
                 {isNotifOpen && (
                   <motion.div 
@@ -228,7 +245,6 @@ export default function AdminDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Profile Avatar */}
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-200 cursor-default">
               {user.username[0].toUpperCase()}
             </div>
@@ -237,14 +253,12 @@ export default function AdminDashboard() {
 
         <div className="p-8 md:p-10 max-w-7xl mx-auto relative z-10">
           {searchQuery ? (
-             /* --- SEARCH RESULTS VIEW --- */
              <div className="space-y-8 animate-in fade-in duration-300">
                <div className="flex items-center gap-3 mb-6">
                  <Search className="w-6 h-6 text-slate-400" />
                  <h2 className="text-2xl font-bold text-slate-900">Search Results for "{searchQuery}"</h2>
                </div>
 
-               {/* 1. Actions */}
                {filteredActions.length > 0 && (
                  <section>
                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Quick Actions</h3>
@@ -256,7 +270,6 @@ export default function AdminDashboard() {
                  </section>
                )}
 
-               {/* 2. Employees */}
                {filteredEmployees.length > 0 && (
                  <section>
                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Employees</h3>
@@ -274,7 +287,6 @@ export default function AdminDashboard() {
                  </section>
                )}
 
-               {/* 3. Tasks */}
                {filteredTasks.length > 0 && (
                  <section>
                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Tasks</h3>
@@ -302,15 +314,14 @@ export default function AdminDashboard() {
                )}
              </div>
           ) : (
-            /* --- DEFAULT DASHBOARD VIEW --- */
             <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500">
               
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-                <p className="text-slate-500 mt-2">
-  Welcome back, <span className="font-bold text-lg text-slate-800">{user.username}</span>. Here is your company overview.
-</p>
+                  <p className="text-slate-500 mt-2">
+                    Welcome back, <span className="font-bold text-lg text-slate-800">{user.username}</span>. Here is your company overview.
+                  </p>
                 </div>
                 
                 {user.company_code && (
@@ -331,7 +342,6 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Employees" value={employees.length} icon={<Users className="text-blue-600" />} trend="Active Users" color="blue" />
                 <StatCard title="Pending Tasks" value={pendingTasks.length} icon={<ClipboardCheck className="text-orange-500" />} trend="In Progress" color="orange" />
@@ -353,7 +363,6 @@ export default function AdminDashboard() {
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Actions Grid */}
                 <div className="xl:col-span-2 space-y-6">
                   <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-blue-500" /> Quick Actions
@@ -365,7 +374,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Activity / Tips */}
                 <div className="space-y-6">
                   <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
                   <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[200px] flex flex-col items-center justify-center text-center">
@@ -392,7 +400,6 @@ export default function AdminDashboard() {
   );
 }
 
-// --- Sub-Components ---
 function StatCard({ title, value, icon, trend, color }) {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
