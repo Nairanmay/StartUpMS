@@ -122,7 +122,8 @@ export default function DocumentHub() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const recentUploadsCount = documents.filter(doc => {
-    const docDate = new Date(doc.created_at || doc.date || Date.now());
+    // UPDATED: Added doc.uploaded_at
+    const docDate = new Date(doc.uploaded_at || doc.created_at || doc.date || Date.now());
     return docDate >= sevenDaysAgo;
   }).length;
 
@@ -238,8 +239,9 @@ export default function DocumentHub() {
                     <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                       {doc.file_size || doc.size ? formatBytes(parseSizeToBytes(doc.file_size || doc.size)) : "Unknown"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(doc.created_at || doc.date || Date.now()).toLocaleDateString()}
+                   <td className="px-6 py-4 text-sm text-slate-500">
+                     {/* UPDATED: Added doc.uploaded_at */}
+                     {new Date(doc.uploaded_at || doc.created_at || doc.date || Date.now()).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
