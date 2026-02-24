@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
   FileText, Search, Upload, Trash2, Download, X, File, Image as ImageIcon, Loader2,
-  Home, CheckSquare, Building2, LogOut, LayoutDashboard 
+  Home, CheckSquare, Building2, LogOut
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getDocuments, uploadDocument, deleteDocument, getUser } from "@/lib/api";
@@ -28,13 +28,17 @@ function UserSidebar({ user }) {
       <div className="h-20 flex items-center px-8 border-b border-slate-50">
         <div className="flex items-center gap-3">
            <img src="/logowb.png" alt="Logo" className="h-30 w-auto" />
-           {/* <span className="font-bold text-lg text-slate-900 tracking-tight">Startify</span> */}
         </div>
       </div>
       <div className="p-6">
         <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">{user?.username?.[0]?.toUpperCase() || "U"}</div>
-          <div className="overflow-hidden"><p className="text-sm font-bold text-slate-900 truncate">{user?.username}</p><p className="text-xs text-blue-600 font-medium">Employee</p></div>
+          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            {user?.username?.[0]?.toUpperCase() || "U"}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-bold text-slate-900 truncate">{user?.username}</p>
+            <p className="text-xs text-blue-600 font-medium">Employee</p>
+          </div>
         </div>
         <nav className="space-y-1">
           {navItems.map((item) => (
@@ -47,7 +51,9 @@ function UserSidebar({ user }) {
         </nav>
       </div>
       <div className="mt-auto p-6 border-t border-slate-50">
-        <button onClick={handleLogout} className="flex items-center justify-center gap-2 w-full text-slate-600 bg-slate-50 hover:bg-red-50 hover:text-red-600 font-medium px-4 py-3 rounded-xl transition-colors text-sm"><LogOut className="w-4 h-4" /> Sign Out</button>
+        <button onClick={handleLogout} className="flex items-center justify-center gap-2 w-full text-slate-600 bg-slate-50 hover:bg-red-50 hover:text-red-600 font-medium px-4 py-3 rounded-xl transition-colors text-sm">
+          <LogOut className="w-4 h-4" /> Sign Out
+        </button>
       </div>
     </aside>
   );
@@ -71,18 +77,20 @@ export default function UserDocumentHub() {
 
   if (loadingUser) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-600 w-10 h-10" /></div>;
 
-  return (
+ return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
       <UserSidebar user={user} />
       <main className="flex-1 lg:ml-72 p-8 md:p-12 transition-all">
-        <DocumentHubInterface title="Team Documents" />
+        {/* PROPERLY PASSING THE USER DOWN HERE */}
+        <DocumentHubInterface title="Team Documents" user={user} />
       </main>
     </div>
   );
 }
 
 // --- Inner Interface Component ---
-function DocumentHubInterface({ title }) {
+// ACCEPTING THE USER PROP HERE
+function DocumentHubInterface({ title, user }) {
   const [documents, setDocuments] = useState([]);
   const [filteredDocs, setFilteredDocs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,7 +132,8 @@ function DocumentHubInterface({ title }) {
     if (!uploadFile || !uploadTitle) return;
 
     try {
-      await uploadDocument(uploadFile, uploadTitle, uploadDesc);
+      // PROPERLY PASSING USER.ID TO API
+      await uploadDocument(uploadFile, uploadTitle, uploadDesc, user?.id);
       await fetchData(); 
       setIsUploading(false);
       setUploadFile(null);
@@ -204,9 +213,12 @@ function DocumentHubInterface({ title }) {
                   </div>
                   <h3 className="font-semibold truncate text-sm" title={doc.title}>{doc.title}</h3>
                   <p className="text-xs text-gray-500 mt-2 flex justify-between">
-                    <span>{doc.date}</span><span>{doc.file_size}</span>
+                    <span>{new Date(doc.uploaded_at || doc.created_at || Date.now()).toLocaleDateString()}</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">By {doc.uploaded_by_username}</p>
+                  {/* SHOW THE USERNAME HERE */}
+                  <p className="text-xs text-blue-600 font-medium mt-1">
+                    By {doc.uploaded_by_username || "Admin"}
+                  </p>
                   
                   <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition flex justify-center bg-white/90 backdrop-blur rounded-b-2xl">
                     <a href={doc.file} target="_blank" className="text-blue-600 font-medium flex items-center gap-2 text-sm">

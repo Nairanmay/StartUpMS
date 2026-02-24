@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         {/* Logo Area */}
         <div className="relative z-10 flex items-center gap-2">
-           <img src="/logowb.png" alt="Logo" className="w-10 h-auto" />
+           {/* <img src="/logowb.png" alt="Logo" className="w-10 h-auto" /> */}
            <span className="font-bold text-xl tracking-tight">Startify</span>
         </div>
 
@@ -81,15 +81,20 @@ export default function LoginPage() {
       </div>
 
       {/* --- RIGHT SIDE: Form --- */}
+      {/* --- RIGHT SIDE: Form --- */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
-        <Link href="/" className="absolute top-8 left-8 text-slate-400 hover:text-slate-600 flex items-center gap-2 transition-colors">
+        
+        {/* Optional: A subtle overlay so the form and text are easy to read over the image */}
+        {/* <div className="absolute inset-0 bg-slate-100/1 backdrop-blur-sm"></div> */}
+
+        <Link href="/" className="absolute top-8 left-8 text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-2 transition-colors z-10 bg-white/50 px-4 py-2 rounded-full backdrop-blur-md">
           <ArrowLeft className="w-4 h-4" /> Back to Home
         </Link>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100"
+          className="w-full max-w-md bg-white/95 backdrop-blur-xl p-8 sm:p-10 rounded-3xl shadow-2xl border border-white z-10"
         >
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Sign in</h1>
@@ -109,7 +114,7 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
                 placeholder="Enter your username"
                 required
               />
@@ -125,7 +130,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B1A]/20 focus:border-[#FF6B1A] transition-all"
                   placeholder="••••••••"
                   required
                 />

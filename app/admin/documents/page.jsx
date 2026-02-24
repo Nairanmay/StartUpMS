@@ -227,9 +227,12 @@ export default function DocumentHub() {
                         <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-white group-hover:shadow-sm transition">
                           {getFileIcon(doc.file || "")}
                         </div>
-                        <div>
+                       <div>
                           <p className="font-bold text-slate-900 text-sm">{doc.title || "Untitled"}</p>
-                          <p className="text-xs text-slate-400 truncate max-w-[200px]">{doc.file?.split('/').pop()}</p>
+                          {/* SHOW THE USERNAME HERE */}
+                          <p className="text-xs text-blue-600 font-medium truncate max-w-[200px]">
+                            Uploaded by: {doc.uploaded_by_username || "Admin"}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -272,6 +275,7 @@ export default function DocumentHub() {
 
         {/* Upload Modal */}
         <UploadModal 
+          user={user}
           isOpen={isUploadModalOpen} 
           onClose={() => setIsUploadModalOpen(false)} 
           onSuccess={() => {
@@ -305,7 +309,7 @@ function StatCard({ title, value, icon, color }) {
   );
 }
 
-function UploadModal({ isOpen, onClose, onSuccess }) {
+function UploadModal({ user, isOpen, onClose, onSuccess }) {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -314,64 +318,40 @@ function UploadModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    if (!file) return;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", title || file.name);
     
-    const msg = validateForm();
-    if (msg) {
-      setError(msg);
-      return;
+    // FIX: Append the user ID so the backend knows who uploaded it
+    if (user?.id) {
+      formData.append("uploaded_by", user.id);
     }
 
     try {
-      setLoading(true);
-
-      const formData = new FormData();
-      formData.append("name", projectName.trim());
-      formData.append("type", projectType);
-      formData.append("deadline", deadline);
+      const token = localStorage.getItem("access");
+      const res = await fetch("https://backend-ug9v.onrender.com/api/documents/", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }, // Do NOT set Content-Type here
+        body: formData
+      });
       
-      // --- FIX: Attach the company code to the Project ---
-      if (user?.company_code) {
-        formData.append("company_code", user.company_code);
+      if (res.ok) {
+        onSuccess();
+        setFile(null);
+        setTitle("");
+      } else {
+        const errorData = await res.json();
+        console.error("Upload error details:", errorData);
+        alert("Upload failed. Check console for details.");
       }
-      
-      if (adminFile) formData.append("file", adminFile);
-
-      const project = await createProject(formData);
-
-      for (const t of tasks) {
-        const taskData = new FormData();
-        taskData.append("project", project.id);
-        taskData.append("description", t.description.trim());
-        taskData.append("requires_document", String(t.requires_document));
-
-        // --- FIX: Attach the company code to the Task ---
-        if (user?.company_code) {
-          taskData.append("company_code", user.company_code);
-        }
-
-        t.assignedTo.forEach((id) => taskData.append("assigned_to", id));
-        
-        if (t.document) taskData.append("document", t.document);
-
-        await createTask(taskData);
-      }
-
-      setProjectName("");
-      setProjectType("individual");
-      setDeadline("");
-      setTasks([{ description: "", assignedTo: [], requires_document: false, document: null }]);
-      setAdminFile(null);
-      setSuccess("Project and tasks created successfully! ✨");
-      
-      setTimeout(() => setSuccess(""), 3000);
-
     } catch (err) {
       console.error(err);
-      setError("Error creating project or tasks. Please try again.");
+      alert("Error uploading");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
