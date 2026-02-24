@@ -314,32 +314,64 @@ function UploadModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
-    setUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("title", title || file.name);
+    setError("");
+    setSuccess("");
+    
+    const msg = validateForm();
+    if (msg) {
+      setError(msg);
+      return;
+    }
 
     try {
-      const token = localStorage.getItem("access");
-      const res = await fetch("https://backend-ug9v.onrender.com/api/documents/", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
-      if (res.ok) {
-        onSuccess();
-        setFile(null);
-        setTitle("");
-      } else {
-        alert("Upload failed");
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("name", projectName.trim());
+      formData.append("type", projectType);
+      formData.append("deadline", deadline);
+      
+      // --- FIX: Attach the company code to the Project ---
+      if (user?.company_code) {
+        formData.append("company_code", user.company_code);
       }
+      
+      if (adminFile) formData.append("file", adminFile);
+
+      const project = await createProject(formData);
+
+      for (const t of tasks) {
+        const taskData = new FormData();
+        taskData.append("project", project.id);
+        taskData.append("description", t.description.trim());
+        taskData.append("requires_document", String(t.requires_document));
+
+        // --- FIX: Attach the company code to the Task ---
+        if (user?.company_code) {
+          taskData.append("company_code", user.company_code);
+        }
+
+        t.assignedTo.forEach((id) => taskData.append("assigned_to", id));
+        
+        if (t.document) taskData.append("document", t.document);
+
+        await createTask(taskData);
+      }
+
+      setProjectName("");
+      setProjectType("individual");
+      setDeadline("");
+      setTasks([{ description: "", assignedTo: [], requires_document: false, document: null }]);
+      setAdminFile(null);
+      setSuccess("Project and tasks created successfully! ✨");
+      
+      setTimeout(() => setSuccess(""), 3000);
+
     } catch (err) {
       console.error(err);
-      alert("Error uploading");
+      setError("Error creating project or tasks. Please try again.");
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
