@@ -189,14 +189,21 @@ export default function TaskAssignPage() {
       // Create tasks
       for (const t of tasks) {
         const taskData = new FormData();
-        taskData.append("project_id", project.id);
+        
+        taskData.append("project", project.id);
         taskData.append("description", t.description.trim());
         taskData.append("requires_document", String(t.requires_document));
 
+        if (user?.company_code) {
+          taskData.append("company_code", user.company_code);
+        }
+
+        // FIX: Changed back to assigned_to_ids
         t.assignedTo.forEach((id) => taskData.append("assigned_to_ids", id));
+        
         if (t.document) taskData.append("document", t.document);
 
-        await createTask(taskData, true);
+        await createTask(taskData);
       }
 
       // Reset form
