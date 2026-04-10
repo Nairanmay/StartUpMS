@@ -375,13 +375,13 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-6">
-                  <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
+                  {/* <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
                   <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[200px] flex flex-col items-center justify-center text-center">
                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                         <Activity className="w-5 h-5 text-slate-300" />
                      </div>
                      <p className="text-slate-500 text-sm">No recent activity logged.</p>
-                  </div>
+                  </div> */}
                   
                   <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-200">
                     <h3 className="font-bold text-lg mb-2">🚀 Pro Tip</h3>
