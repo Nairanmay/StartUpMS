@@ -40,7 +40,7 @@ function UserSidebar({ user }) {
     { href: "/view_task", label: "My Tasks", icon: <CheckSquare className="w-5 h-5" /> },
     { href: "/dashboard/documents", label: "Documents", icon: <FileText className="w-5 h-5" /> },
     { href: "/dashboard/business_details", label: "Company Info", icon: <Building2 className="w-5 h-5" /> },
-    { href: "/dashboard/profile", label: "My Profile", icon: <LayoutDashboard className="w-5 h-5" /> },
+    // { href: "/dashboard/profile", label: "My Profile", icon: <LayoutDashboard className="w-5 h-5" /> },
   ];
 
   return (

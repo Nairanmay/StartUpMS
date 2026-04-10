@@ -312,7 +312,7 @@ export default function TaskAssignPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reference File (Optional)</label>
+                  {/* <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reference File (Optional)</label> */}
                   <label className="block w-full border border-dashed border-slate-300 rounded-xl p-4 cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition text-center">
                     <input type="file" onChange={(e) => setAdminFile(e.target.files[0])} className="hidden" />
                     <div className="flex items-center justify-center gap-2 text-slate-600 text-sm font-medium">
@@ -378,9 +378,9 @@ export default function TaskAssignPage() {
                           onChange={(e) => handleTaskChange(index, "requires_document", e.target.checked)}
                           className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                         />
-                        <label htmlFor={`req-doc-${index}`} className="text-sm text-slate-600 cursor-pointer select-none">
+                        {/* <label htmlFor={`req-doc-${index}`} className="text-sm text-slate-600 cursor-pointer select-none">
                           Require employee to upload a file
-                        </label>
+                        </label> */}
                       </div>
                     </div>
 
@@ -410,12 +410,12 @@ export default function TaskAssignPage() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Task Attachment</label>
-                        <input
+                        {/* <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Task Attachment</label> */}
+                        {/* <input
                           type="file"
                           onChange={(e) => handleTaskChange(index, "document", e.target.files[0])}
                           className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
+                        /> */}
                       </div>
                     </div>
                   </div>

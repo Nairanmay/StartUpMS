@@ -263,7 +263,7 @@ export default function MyTasksPage() {
                           <div className="flex items-start gap-2">
                               <div>
                                   <p className="font-medium text-slate-900 text-base mb-1">{task.description}</p>
-                                  <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide">
+                                  {/* <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide">
                                       {task.requires_document && (
                                       <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${task.document ? "bg-green-50 text-green-700 border-green-100" : "bg-amber-50 text-amber-700 border-amber-100"}`}>
                                           {task.document ? "Doc Uploaded" : "Doc Required"}
@@ -272,7 +272,7 @@ export default function MyTasksPage() {
                                       <span className={`px-2.5 py-1 rounded-md border ${(task.status || "").toLowerCase() === 'completed' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                                           {task.status || 'Pending'}
                                       </span>
-                                  </div>
+                                  </div> */}
                               </div>
                           </div>
                         </div>
